@@ -6,7 +6,7 @@ const supabase = createClient(
 );
 
 export async function requireAuth(req, res, next) {
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === 'development' || process.env.BYPASS_AUTH === 'true') {
     req.user = { id: 'dev-user-id-123', email: 'dev@motus.app' };
     return next();
   }
