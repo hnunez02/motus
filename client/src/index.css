@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background-color: #0F0F0F;
+    color: #F5F5F5;
+  }
+
+  input[type='range'] {
+    @apply w-full h-2 rounded-full appearance-none cursor-pointer;
+    background: #242424;
+  }
+
+  input[type='range']::-webkit-slider-thumb {
+    @apply appearance-none w-5 h-5 rounded-full bg-brand cursor-pointer;
+    margin-top: -6px;
+  }
+
+  input[type='range']::-webkit-slider-runnable-track {
+    @apply h-2 rounded-full;
+    background: #242424;
+  }
+}

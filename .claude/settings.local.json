@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c \"\nimport json\nf = '/Users/hectornunez/.claude/projects/-Users-hectornunez-Motus/d958f2c2-0005-4bcd-9f1b-f92753f65147/subagents/agent-a9fba784bf1691b0d.jsonl'\nlines = open\\(f\\).readlines\\(\\)\nlast = json.loads\\(lines[-1]\\)\nmsg = last.get\\('message',{}\\)\ncontent = msg.get\\('content',''\\)\nif isinstance\\(content, list\\):\n    for c in content:\n        if isinstance\\(c, dict\\) and c.get\\('type'\\) == 'text':\n            print\\(c['text'][-500:]\\)\nelif isinstance\\(content, str\\):\n    print\\(content[-500:]\\)\n\")",
+      "Bash(cd /Users/hectornunez/Motus/server && npm install 2>&1 | tail -5)",
+      "Bash(cd /Users/hectornunez/Motus/client && npm install 2>&1 | tail -5)",
+      "Bash(npm install canvas-confetti 2>&1 | tail -4)",
+      "Bash(find /Users/hectornunez/Motus/client/src/pages -type f -name \"*.jsx\" -o -name \"*.js\" -o -name \"*.tsx\" -o -name \"*.ts\" 2>/dev/null | sort)",
+      "Bash(find /Users/hectornunez/Motus/client/src/components -type f \\\\\\( -name \"*.jsx\" -o -name \"*.js\" -o -name \"*.tsx\" -o -name \"*.ts\" \\\\\\) 2>/dev/null | sort)",
+      "Bash(find /Users/hectornunez/Motus/server/routes -type f -name \"*.js\" 2>/dev/null | sort)",
+      "Bash(cd /Users/hectornunez/Motus/client && npm install react-markdown)"
+    ]
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "motus-server",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node --env-file=.env --watch index.js",
+    "start": "node --env-file=.env index.js",
+    "db:push": "npx prisma db push",
+    "db:seed": "node --env-file=.env prisma/seed.js",
+    "db:studio": "npx prisma studio",
+    "db:generate": "npx prisma generate"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.36.3",
+    "@prisma/client": "^5.22.0",
+    "@supabase/supabase-js": "^2.46.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "prisma": "^5.22.0"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "appId": "com.motus.app",
+  "appName": "Motus",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 0
+    }
+  }
+}

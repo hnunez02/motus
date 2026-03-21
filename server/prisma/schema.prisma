@@ -1,0 +1,112 @@
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  directUrl  = env("DIRECT_URL")
+  extensions = [pgvector(map: "vector")]
+}
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  trainingAge   Int      @default(0)
+  goals         Json     @default("[]")
+  equipment     Json     @default("[]")
+  injuryFlags   Json     @default("[]")
+  daysPerWeek   Int      @default(4)
+  createdAt     DateTime @default(now())
+
+  perfProfile   PerfProfile?
+  mesocycles    Mesocycle[]
+  loggedSets    LoggedSet[]
+}
+
+model PerfProfile {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  fatigueScore   Float    @default(0)
+  weeklyVolume   Json     @default("{}")
+  lastUpdated    DateTime @default(now())
+  user           User     @relation(fields: [userId], references: [id])
+}
+
+model Mesocycle {
+  id            String        @id @default(uuid())
+  userId        String
+  goal          String
+  weeksTotal    Int           @default(6)
+  currentWeek   Int           @default(1)
+  isActive      Boolean       @default(true)
+  createdAt     DateTime      @default(now())
+  user          User          @relation(fields: [userId], references: [id])
+  workoutPlans  WorkoutPlan[]
+}
+
+model WorkoutPlan {
+  id           String       @id @default(uuid())
+  mesocycleId  String
+  weekNum      Int
+  dayLabel     String
+  modality     String
+  createdAt    DateTime     @default(now())
+  mesocycle    Mesocycle    @relation(fields: [mesocycleId], references: [id])
+  plannedSets  PlannedSet[]
+}
+
+model PlannedSet {
+  id           String      @id @default(uuid())
+  planId       String
+  exerciseId   String
+  setNumber    Int
+  targetReps   Int
+  targetRpe    Float
+  restSeconds  Int         @default(120)
+  notes        String?
+  plan         WorkoutPlan @relation(fields: [planId], references: [id])
+  exercise     Exercise    @relation(fields: [exerciseId], references: [id])
+  loggedSets   LoggedSet[]
+}
+
+model Exercise {
+  id            String      @id @default(uuid())
+  name          String      @unique
+  muscleGroups  String[]
+  category      String
+  modality      String
+  equipment     String[]
+  formCues      String[]
+  videoUrl      String?
+  embedding     Unsupported("vector(1536)")?
+  plannedSets   PlannedSet[]
+}
+
+model LoggedSet {
+  id             String      @id @default(uuid())
+  plannedSetId   String?
+  userId         String
+  exerciseId     String?
+  actualWeight   Float
+  actualReps     Int
+  loggedRpe      Float
+  targetRpe      Float?
+  rpeDelta       Float?
+  loggedAt       DateTime    @default(now())
+  plannedSet     PlannedSet? @relation(fields: [plannedSetId], references: [id])
+  user           User        @relation(fields: [userId], references: [id])
+}
+
+model AiCitation {
+  id          String  @id @default(uuid())
+  title       String
+  authors     String
+  journal     String
+  year        Int
+  abstract    String
+  keyFindings String
+  tags        String[]
+  embedding   Unsupported("vector(1536)")?
+}

@@ -1,0 +1,556 @@
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+const EXERCISES = [
+  // ─── PUSH ───────────────────────────────────────────────────────────
+  {
+    name: 'Barbell Bench Press',
+    muscleGroups: ['chest', 'triceps', 'shoulders'],
+    category: 'compound',
+    modality: 'lift',
+    equipment: ['barbell', 'bench'],
+    formCues: [
+      'Retract and depress your scapulae before unracking',
+      'Drive your feet into the floor throughout the press',
+      'Bar path slightly diagonal — touch below chest, press toward face',
+      'Squeeze the bar like you\'re trying to bend it apart',
+    ],
+  },
+  {
+    name: 'Incline Dumbbell Press',
+    muscleGroups: ['chest', 'triceps', 'front_delt'],
+    category: 'compound',
+    modality: 'lift',
+    equipment: ['dumbbells', 'bench'],
+    formCues: [
+      'Set bench to 30-45 degrees — higher kills chest recruitment',
+      'Touch dumbbells at the top to maximize peak contraction',
+      'Lower slowly with a 2-3 second eccentric for more stretch',
+      'Keep wrists stacked over elbows throughout',
+    ],
+  },
+  {
+    name: 'Overhead Press',
+    muscleGroups: ['shoulders', 'triceps', 'front_delt'],
+    category: 'compound',
+    modality: 'lift',
+    equipment: ['barbell'],
+    formCues: [
+      'Start bar at upper chest, elbows slightly in front of bar',
+      'Press bar in a slight arc — back, not straight up',
+      'Squeeze glutes and brace core to protect lower back',
+      'Full lockout at top — shrug slightly to engage traps',
+    ],
+  },
+  {
+    name: 'Cable Fly',
+    muscleGroups: ['chest'],
+    category: 'isolation',
+    modality: 'lift',
+    equipment: ['cables'],
+    formCues: [
+      'Slight forward lean — hinge at hips, not waist',
+      'Maintain a slight elbow bend throughout the movement',
+      'Squeeze chest hard at the crossover point',
+      'Control the eccentric — don\'t let cables yank your arms back',
+    ],
+  },
+  {
+    name: 'Dumbbell Lateral Raise',
+    muscleGroups: ['shoulders'],
+    category: 'isolation',
+    modality: 'lift',
+    equipment: ['dumbbells'],
+    formCues: [
+      'Lead with your elbows, not your hands',
+      'Slight forward lean and internal rotation — thumbs slightly down',
+      'Stop at shoulder height — going higher reduces delt tension',
+      'Use a 2-second pause at the top for max time under tension',
+    ],
+  },
+  {
+    name: 'Tricep Pushdown',
+    muscleGroups: ['triceps'],
+    category: 'isolation',
+    modality: 'lift',
+    equipment: ['cables'],
+    formCues: [
+      'Keep elbows pinned to your sides — don\'t let them flare',
+      'Full extension at the bottom — squeeze hard',
+      'Control the return — don\'t let the weight stack bounce',
+      'Slight forward lean allows better long-head stretch',
+    ],
+  },
+  {
+    name: 'Close-Grip Bench Press',
+    muscleGroups: ['triceps', 'chest'],
+    category: 'compound',
+    modality: 'lift',
+    equipment: ['barbell', 'bench'],
+    formCues: [
+      'Grip just inside shoulder width — going too close stresses wrists',
+      'Tuck elbows to roughly 45 degrees — not flared, not pinned',
+      'Touch lower chest to maximize tricep stretch at bottom',
+      'Press through the heel of your palm',
+    ],
+  },
+  {
+    name: 'Dips',
+    muscleGroups: ['triceps', 'chest'],
+    category: 'compound',
+    modality: 'lift',
+    equipment: ['dip_bars'],
+    formCues: [
+      'Forward lean shifts emphasis to chest, upright hits triceps more',
+      'Lower until upper arms are parallel to floor — full ROM',
+      'Control the descent — 2-3 second eccentric',
+      'Fully lock out at the top to recruit all tricep heads',
+    ],
+  },
+  {
+    name: 'Machine Chest Press',
+    muscleGroups: ['chest', 'triceps'],
+    category: 'compound',
+    modality: 'lift',
+    equipment: ['machine'],
+    formCues: [
+      'Adjust seat so handles are at mid-chest height',
+      'Retract scapulae and hold them back throughout',
+      'Full stretch at the bottom — don\'t cut the ROM',
+      'Great for dropsets and high-rep finisher work',
+    ],
+  },
+  {
+    name: 'Incline Cable Fly',
+    muscleGroups: ['chest'],
+    category: 'isolation',
+    modality: 'lift',
+    equipment: ['cables', 'bench'],
+    formCues: [
+      'Set pulleys low — cables should pull upward toward chest',
+      'Keep a long arc — imagine hugging a barrel',
+      'Squeeze at top and hold 1 second',
+      'Slight elbow bend throughout — never lock out elbows',
+    ],
+  },
+
+  // ─── PULL ───────────────────────────────────────────────────────────
+  {
+    name: 'Barbell Row',
+    muscleGroups: ['back', 'biceps', 'rear_delt'],
+    category: 'compound',
+    modality: 'lift',
+    equipment: ['barbell'],
+    formCues: [
+      'Hinge to roughly 45 degrees — more upright hits upper back',
+      'Pull bar to lower chest/belly button — not upper chest',
+      'Lead with your elbows, not your hands',
+      'Squeeze shoulder blades together at peak contraction',
+    ],
+  },
+  {
+    name: 'Weighted Pull-Up',
+    muscleGroups: ['back', 'biceps'],
+    category: 'compound',
+    modality: 'lift',
+    equipment: ['pull_up_bar', 'belt'],
+    formCues: [
+      'Dead hang at the bottom — full shoulder depression',
+      'Pull elbows down and back — not just up',
+      'Chest to bar if possible — don\'t half rep',
+      'Control the eccentric — 2-3 seconds down',
+    ],
+  },
+  {
+    name: 'Seated Cable Row',
+    muscleGroups: ['back', 'biceps'],
+    category: 'compound',
+    modality: 'lift',
+    equipment: ['cables'],
+    formCues: [
+      'Lean slightly forward at start — maximize lat stretch',
+      'Drive elbows back past torso for full contraction',
+      'Keep torso upright — don\'t row with your lower back',
+      'Pause 1 second at peak contraction',
+    ],
+  },
+  {
+    name: 'Lat Pulldown',
+    muscleGroups: ['back', 'biceps'],
+    category: 'compound',
+    modality: 'lift',
+    equipment: ['cables'],
+    formCues: [
+      'Slight lean back — pull bar to upper chest, not behind neck',
+      'Initiate with lat depression before bending elbows',
+      'Full stretch at top — let lats elongate before next rep',
+      'Wide grip increases lat stretch; close grip increases ROM',
+    ],
+  },
+  {
+    name: 'Face Pull',
+    muscleGroups: ['rear_delt', 'shoulders'],
+    category: 'isolation',
+    modality: 'lift',
+    equipment: ['cables'],
+    formCues: [
+      'Set pulley at face height or slightly above',
+      'Pull rope to forehead — external rotation at peak',
+      'High rep, light weight — this is corrective work',
+      'Don\'t let elbows drop below shoulder height',
+    ],
+  },
+  {
+    name: 'Barbell Curl',
+    muscleGroups: ['biceps'],
+    category: 'isolation',
+    modality: 'lift',
+    equipment: ['barbell'],
+    formCues: [
+      'Elbows stay at your sides — no swinging',
+      'Supinate at the top — turn pinkies up for peak contraction',
+      'Full extension at the bottom — don\'t cut the stretch',
+      'EZ-bar reduces wrist stress for high-frequency training',
+    ],
+  },
+  {
+    name: 'Hammer Curl',
+    muscleGroups: ['biceps'],
+    category: 'isolation',
+    modality: 'lift',
+    equipment: ['dumbbells'],
+    formCues: [
+      'Neutral grip — thumbs pointing up throughout',
+      'Targets brachialis and brachioradialis more than supinated curl',
+      'Curl across body for cross-body hammer variant',
+      'Squeeze hard at top, slow down on the way down',
+    ],
+  },
+  {
+    name: 'Incline Dumbbell Curl',
+    muscleGroups: ['biceps'],
+    category: 'isolation',
+    modality: 'lift',
+    equipment: ['dumbbells', 'bench'],
+    formCues: [
+      'Set bench to 45-60 degrees — creates maximal stretch on long head',
+      'Arms hang straight down at start — don\'t curl from the hip',
+      'Supinate fully at the top',
+      'Best stretch-position bicep exercise available',
+    ],
+  },
+  {
+    name: 'Meadows Row',
+    muscleGroups: ['back', 'rear_delt'],
+    category: 'compound',
+    modality: 'lift',
+    equipment: ['barbell'],
+    formCues: [
+      'Landmine setup — bar anchored in corner',
+      'Stagger stance, pull to hip with high elbow',
+      'Allows greater ROM than standard row',
+      'Great for unilateral back development',
+    ],
+  },
+  {
+    name: 'Cable Pullover',
+    muscleGroups: ['back'],
+    category: 'isolation',
+    modality: 'lift',
+    equipment: ['cables'],
+    formCues: [
+      'Face away from machine, arms overhead, slight elbow bend',
+      'Pull down in arc — feel lats stretch at the top',
+      'Keep core braced — don\'t hyperextend lower back',
+      'Straight-arm variation hits lats without bicep fatigue',
+    ],
+  },
+
+  // ─── LEGS ────────────────────────────────────────────────────────────
+  {
+    name: 'Barbell Back Squat',
+    muscleGroups: ['quads', 'glutes', 'hamstrings'],
+    category: 'compound',
+    modality: 'lift',
+    equipment: ['barbell', 'squat_rack'],
+    formCues: [
+      'Bar sits on upper traps (high bar) or lower traps (low bar)',
+      'Knees track over toes — push them out',
+      'Break parallel — hip crease below knee at minimum',
+      'Drive through the whole foot — not just heels',
+    ],
+  },
+  {
+    name: 'Romanian Deadlift',
+    muscleGroups: ['hamstrings', 'glutes'],
+    category: 'compound',
+    modality: 'lift',
+    equipment: ['barbell'],
+    formCues: [
+      'Push hips back — not down. This is a hip hinge, not a squat',
+      'Bar stays close to legs throughout the descent',
+      'Feel a deep hamstring stretch — go until neutral spine breaks',
+      'Drive hips through at the top — full glute contraction',
+    ],
+  },
+  {
+    name: 'Leg Press',
+    muscleGroups: ['quads', 'glutes'],
+    category: 'compound',
+    modality: 'lift',
+    equipment: ['machine'],
+    formCues: [
+      'High foot placement targets glutes/hamstrings more',
+      'Low foot placement increases quad emphasis',
+      'Don\'t lock knees out — keep slight tension throughout',
+      'Full ROM — bring knees close to chest at the bottom',
+    ],
+  },
+  {
+    name: 'Bulgarian Split Squat',
+    muscleGroups: ['quads', 'glutes', 'hamstrings'],
+    category: 'compound',
+    modality: 'lift',
+    equipment: ['dumbbells', 'bench'],
+    formCues: [
+      'Rear foot elevated — front foot far enough forward to keep shin vertical',
+      'Sink straight down — don\'t lunge forward',
+      'Drive through heel of front foot to bias glutes',
+      'Excellent unilateral stretch-position quad exercise',
+    ],
+  },
+  {
+    name: 'Leg Curl',
+    muscleGroups: ['hamstrings'],
+    category: 'isolation',
+    modality: 'lift',
+    equipment: ['machine'],
+    formCues: [
+      'Lying leg curl provides stretch at hip — best for hypertrophy',
+      'Curl to full contraction — hamstrings should cramp slightly',
+      'Point toes slightly to engage different hamstring heads',
+      'Slow eccentric — 3 seconds on the way down',
+    ],
+  },
+  {
+    name: 'Hip Thrust',
+    muscleGroups: ['glutes', 'hamstrings'],
+    category: 'compound',
+    modality: 'lift',
+    equipment: ['barbell', 'bench'],
+    formCues: [
+      'Bar sits on hip flexors — pad for comfort',
+      'Chin tucked, ribs down — posterior pelvic tilt at top',
+      'Squeeze glutes at full extension — hold 1-2 seconds',
+      'Drive through the whole foot — not just heels',
+    ],
+  },
+  {
+    name: 'Walking Lunges',
+    muscleGroups: ['quads', 'glutes'],
+    category: 'compound',
+    modality: 'lift',
+    equipment: ['dumbbells'],
+    formCues: [
+      'Long stride increases glute recruitment',
+      'Keep torso upright — resist forward lean',
+      'Back knee lightly touches the floor',
+      'Push off front heel to stand — don\'t push off toes',
+    ],
+  },
+  {
+    name: 'Leg Extension',
+    muscleGroups: ['quads'],
+    category: 'isolation',
+    modality: 'lift',
+    equipment: ['machine'],
+    formCues: [
+      'Full extension — squeeze quads at top for 1 second',
+      'Slow eccentric — resist the weight down',
+      'Adjust seat so knee aligns with machine pivot',
+      'Use for metabolic pump work after compounds',
+    ],
+  },
+  {
+    name: 'Standing Calf Raise',
+    muscleGroups: ['calves'],
+    category: 'isolation',
+    modality: 'lift',
+    equipment: ['machine'],
+    formCues: [
+      'Full stretch at the bottom — dorsiflexion is key',
+      'Rise up on the big toe — not the pinky',
+      'Pause 1 second at peak contraction',
+      'Calves require high reps and full ROM to grow',
+    ],
+  },
+  {
+    name: 'Hack Squat',
+    muscleGroups: ['quads', 'glutes'],
+    category: 'compound',
+    modality: 'lift',
+    equipment: ['machine'],
+    formCues: [
+      'Feet lower on platform = more quad emphasis',
+      'Full depth — break parallel',
+      'Keep lower back in contact with pad throughout',
+      'Drive through quads — don\'t push with hands on knees',
+    ],
+  },
+
+  // ─── CARDIO ──────────────────────────────────────────────────────────
+  {
+    name: 'Treadmill Run',
+    muscleGroups: ['quads', 'hamstrings', 'calves'],
+    category: 'compound',
+    modality: 'cardio',
+    equipment: ['treadmill'],
+    formCues: [
+      'Maintain upright posture — slight forward lean from ankles',
+      'Land midfoot, not heel — reduces impact forces',
+      'Arms relaxed at 90 degrees — don\'t cross body midline',
+      'Breathe rhythmically — 2 steps in, 2 steps out at Zone 2',
+    ],
+  },
+  {
+    name: 'Stationary Bike',
+    muscleGroups: ['quads', 'hamstrings', 'glutes'],
+    category: 'compound',
+    modality: 'cardio',
+    equipment: ['bike'],
+    formCues: [
+      'Seat height: slight knee bend at bottom of pedal stroke',
+      'Pedal in full circles — don\'t just push down',
+      'Low-impact — ideal for active recovery days',
+      'Zone 2: 60-70% max HR — able to hold a conversation',
+    ],
+  },
+  {
+    name: 'Row Machine',
+    muscleGroups: ['back', 'quads', 'hamstrings'],
+    category: 'compound',
+    modality: 'cardio',
+    equipment: ['rowing_machine'],
+    formCues: [
+      'Drive sequence: legs → hips → arms. Return: arms → hips → legs',
+      'Ratio: 25% catch, 65% drive — don\'t rush the return',
+      'Maintain neutral spine — don\'t round lower back',
+      'Full body engagement — most complete cardio machine',
+    ],
+  },
+  {
+    name: 'Jump Rope',
+    muscleGroups: ['calves', 'shoulders'],
+    category: 'compound',
+    modality: 'cardio',
+    equipment: ['jump_rope'],
+    formCues: [
+      'Land on balls of feet — not flat-footed',
+      'Wrists do the turning — not the whole arm',
+      'Keep jumps small — just enough to clear the rope',
+      'Great for HIIT intervals: 30s on, 30s off',
+    ],
+  },
+  {
+    name: 'Assault Bike',
+    muscleGroups: ['quads', 'hamstrings', 'shoulders', 'chest'],
+    category: 'compound',
+    modality: 'cardio',
+    equipment: ['assault_bike'],
+    formCues: [
+      'Push AND pull the handles — engage upper body fully',
+      'Lean slightly forward — don\'t sit upright',
+      'For HIIT: max effort for 20-30s, full rest 2 min',
+      'Most metabolically demanding cardio tool — use sparingly',
+    ],
+  },
+  {
+    name: 'Elliptical',
+    muscleGroups: ['quads', 'hamstrings', 'glutes'],
+    category: 'compound',
+    modality: 'cardio',
+    equipment: ['elliptical'],
+    formCues: [
+      'Upright posture — don\'t slouch on handles',
+      'Reverse direction to increase hamstring/glute emphasis',
+      'Low impact — excellent for recovery sessions',
+      'Push handles to engage upper body',
+    ],
+  },
+
+  // ─── COMPOUNDS (cross-category) ──────────────────────────────────────
+  {
+    name: 'Conventional Deadlift',
+    muscleGroups: ['back', 'hamstrings', 'glutes', 'quads'],
+    category: 'compound',
+    modality: 'lift',
+    equipment: ['barbell'],
+    formCues: [
+      'Bar over mid-foot — not touching shins at setup',
+      'Hip hinge to grip — don\'t squat the deadlift',
+      'Lat activation — "protect your armpits" cue',
+      'Push the floor away — don\'t think of it as pulling',
+    ],
+  },
+  {
+    name: 'Trap Bar Deadlift',
+    muscleGroups: ['quads', 'glutes', 'hamstrings', 'back'],
+    category: 'compound',
+    modality: 'lift',
+    equipment: ['trap_bar'],
+    formCues: [
+      'More quad-dominant than conventional — closer to squat pattern',
+      'High handles reduce ROM — use for beginners or volume work',
+      'Neutral grip reduces forearm fatigue',
+      'Drive through the floor — hips and shoulders rise together',
+    ],
+  },
+  {
+    name: 'Front Squat',
+    muscleGroups: ['quads', 'glutes', 'core'],
+    category: 'compound',
+    modality: 'lift',
+    equipment: ['barbell', 'squat_rack'],
+    formCues: [
+      'Bar rests on front delts and clavicle — not in your hands',
+      'Elbows HIGH throughout — dropping elbows dumps the bar',
+      'More upright torso than back squat — greater quad emphasis',
+      'Keep core braced — this is an anti-flexion challenge',
+    ],
+  },
+  {
+    name: 'Power Clean',
+    muscleGroups: ['quads', 'hamstrings', 'glutes', 'shoulders', 'back'],
+    category: 'compound',
+    modality: 'lift',
+    equipment: ['barbell'],
+    formCues: [
+      'First pull: slow and controlled from floor to knee',
+      'Second pull: explosive triple extension — ankles, knees, hips',
+      'Shrug and pull elbows high — bar stays close to body',
+      'Catch in front rack position — elbows must be high',
+    ],
+  },
+];
+
+async function main() {
+  console.log('Seeding exercises...');
+
+  for (const exercise of EXERCISES) {
+    await prisma.exercise.upsert({
+      where: { name: exercise.name },
+      update: exercise,
+      create: exercise,
+    });
+  }
+
+  console.log(`Seeded ${EXERCISES.length} exercises.`);
+}
+
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(() => prisma.$disconnect());
