@@ -89,6 +89,7 @@ model LoggedSet {
   plannedSetId   String?
   userId         String
   exerciseId     String?
+  exerciseName   String?
   actualWeight   Float
   actualReps     Int
   loggedRpe      Float

@@ -13,7 +13,7 @@ const prisma = new PrismaClient();
 // POST /api/log/set — log a single set
 router.post('/set', requireAuth, async (req, res, next) => {
   try {
-    const { plannedSetId, exerciseId, actualWeight, actualReps, loggedRpe } = req.body;
+    const { plannedSetId, exerciseId, exerciseName, actualWeight, actualReps, loggedRpe } = req.body;
     const userId = req.user.id;
 
     let targetRpe = null;
@@ -27,8 +27,9 @@ router.post('/set', requireAuth, async (req, res, next) => {
     const loggedSet = await prisma.loggedSet.create({
       data: {
         userId,
-        plannedSetId: plannedSetId || null,
-        exerciseId: exerciseId || null,
+        plannedSetId:  plannedSetId  || null,
+        exerciseId:    exerciseId    || null,
+        exerciseName:  exerciseName  || null,
         actualWeight,
         actualReps,
         loggedRpe,
@@ -61,11 +62,12 @@ router.post('/session', requireAuth, async (req, res, next) => {
           data: {
             userId,
             plannedSetId: s.plannedSetId || null,
-            exerciseId: s.exerciseId || null,
+            exerciseId:   s.exerciseId   || null,
+            exerciseName: s.exerciseName || null,
             actualWeight: s.actualWeight,
-            actualReps: s.actualReps,
-            loggedRpe: s.loggedRpe,
-            targetRpe: s.targetRpe || null,
+            actualReps:   s.actualReps,
+            loggedRpe:    s.loggedRpe,
+            targetRpe:    s.targetRpe    || null,
             rpeDelta:
               s.targetRpe !== null ? calculateRpeDelta(s.loggedRpe, s.targetRpe) : null,
           },

@@ -1,29 +1,60 @@
-import axios from 'axios';
-import { supabase } from './supabase.js';
+import { Capacitor } from '@capacitor/core'
+import { CapacitorHttp } from '@capacitor/core'
+import axios from 'axios'
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001',
-  headers: { 'Content-Type': 'application/json' },
-});
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
-// Attach Supabase JWT to every request
-api.interceptors.request.use(async (config) => {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session?.access_token) {
-    config.headers.Authorization = `Bearer ${session.access_token}`;
-  }
-  return config;
-});
+console.log('API initialized, platform:', Capacitor.getPlatform(), 'baseURL:', BASE_URL)
 
-// Global error handling
-api.interceptors.response.use(
-  (res) => res,
-  (err) => {
-    if (err.response?.status === 401) {
-      supabase.auth.signOut();
+const isNative = Capacitor.isNativePlatform()
+
+const api = {
+  async get(url, config = {}) {
+    if (isNative) {
+      const response = await CapacitorHttp.get({
+        url: `${BASE_URL}${url}`,
+        headers: {
+          'Content-Type': 'application/json',
+          ...config.headers,
+        },
+      })
+      if (response.status >= 400) throw { response }
+      return { data: response.data, status: response.status }
     }
-    return Promise.reject(err);
-  }
-);
+    return axios.get(`${BASE_URL}${url}`, config)
+  },
 
-export default api;
+  async post(url, data, config = {}) {
+    if (isNative) {
+      const response = await CapacitorHttp.post({
+        url: `${BASE_URL}${url}`,
+        headers: {
+          'Content-Type': 'application/json',
+          ...config.headers,
+        },
+        data,
+      })
+      if (response.status >= 400) throw { response }
+      return { data: response.data, status: response.status }
+    }
+    return axios.post(`${BASE_URL}${url}`, data, config)
+  },
+
+  async patch(url, data, config = {}) {
+    if (isNative) {
+      const response = await CapacitorHttp.patch({
+        url: `${BASE_URL}${url}`,
+        headers: {
+          'Content-Type': 'application/json',
+          ...config.headers,
+        },
+        data,
+      })
+      if (response.status >= 400) throw { response }
+      return { data: response.data, status: response.status }
+    }
+    return axios.patch(`${BASE_URL}${url}`, data, config)
+  },
+}
+
+export default api

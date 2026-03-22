@@ -58,8 +58,8 @@ function stripCitations(text) {
 
 function matchesFilter(exercise, chip) {
   if (chip === 'all') return true;
-  if (chip === 'cardio') return exercise.modality === 'cardio';
-  const muscles = exercise.muscleGroups || [];
+  if (chip === 'cardio') return exercise?.modality === 'cardio';
+  const muscles = exercise?.muscleGroups ?? [];
   if (chip === 'push') return muscles.some((m) => PUSH_MUSCLES.has(m));
   if (chip === 'pull') return muscles.some((m) => PULL_MUSCLES.has(m));
   if (chip === 'legs') return muscles.some((m) => LEG_MUSCLES.has(m));
@@ -70,8 +70,8 @@ function matchesSearch(exercise, query) {
   if (!query) return true;
   const q = query.toLowerCase();
   return (
-    exercise.name.toLowerCase().includes(q) ||
-    (exercise.muscleGroups || []).some((m) => m.toLowerCase().includes(q))
+    (exercise?.name ?? '').toLowerCase().includes(q) ||
+    (exercise?.muscleGroups ?? []).some((m) => m.toLowerCase().includes(q))
   );
 }
 
@@ -86,20 +86,20 @@ function ExerciseLibraryCard({ exercise, onTap }) {
     >
       <div className="flex items-start justify-between gap-2">
         <span className="font-semibold text-text-primary text-sm leading-tight">
-          {exercise.name}
+          {exercise?.name ?? ''}
         </span>
         <span
           className={`text-[10px] font-mono uppercase tracking-wide flex-shrink-0 px-2 py-0.5 rounded-chip ${
-            exercise.category === 'compound'
+            exercise?.category === 'compound'
               ? 'bg-brand text-white'
               : 'border border-surface-elevated text-text-muted'
           }`}
         >
-          {exercise.category}
+          {exercise?.category ?? ''}
         </span>
       </div>
       <div className="flex flex-wrap gap-1">
-        {(exercise.muscleGroups || []).map((m) => (
+        {(exercise?.muscleGroups ?? []).map((m) => (
           <span
             key={m}
             className={`text-[10px] px-2 py-0.5 rounded-chip font-medium ${
@@ -139,10 +139,10 @@ function ExerciseDetailSheet({ exercise, onClose }) {
           <div className="flex items-start justify-between gap-2">
             <div>
               <h2 className="font-display font-bold text-text-primary text-lg leading-tight">
-                {exercise.name}
+                {exercise?.name ?? ''}
               </h2>
               <div className="flex flex-wrap gap-1 mt-1.5">
-                {(exercise.muscleGroups || []).map((m) => (
+                {(exercise?.muscleGroups ?? []).map((m) => (
                   <span
                     key={m}
                     className={`text-[10px] px-2 py-0.5 rounded-chip font-medium ${
@@ -156,12 +156,12 @@ function ExerciseDetailSheet({ exercise, onClose }) {
             </div>
             <span
               className={`text-[10px] font-mono uppercase tracking-wide flex-shrink-0 px-2 py-0.5 rounded-chip mt-1 ${
-                exercise.category === 'compound'
+                exercise?.category === 'compound'
                   ? 'bg-brand text-white'
                   : 'border border-surface-elevated text-text-muted'
               }`}
             >
-              {exercise.category}
+              {exercise?.category ?? ''}
             </span>
           </div>
         </div>
@@ -182,13 +182,13 @@ function ExerciseDetailSheet({ exercise, onClose }) {
           </div>
 
           {/* Form cues */}
-          {exercise.formCues?.length > 0 && (
+          {(exercise?.formCues ?? []).length > 0 && (
             <div>
               <p className="text-[10px] text-text-muted uppercase tracking-wide mb-2.5">
                 Form cues
               </p>
               <ol className="space-y-2.5">
-                {exercise.formCues.map((cue, i) => (
+                {(exercise?.formCues ?? []).map((cue, i) => (
                   <li key={i} className="flex gap-3">
                     <span className="text-brand font-mono text-xs flex-shrink-0 w-4 pt-0.5">
                       {i + 1}.
@@ -201,13 +201,13 @@ function ExerciseDetailSheet({ exercise, onClose }) {
           )}
 
           {/* Equipment */}
-          {exercise.equipment?.length > 0 && (
+          {(exercise?.equipment ?? []).length > 0 && (
             <div>
               <p className="text-[10px] text-text-muted uppercase tracking-wide mb-2">
                 Equipment
               </p>
               <div className="flex flex-wrap gap-1.5">
-                {exercise.equipment.map((e) => (
+                {(exercise?.equipment ?? []).map((e) => (
                   <span
                     key={e}
                     className="text-xs px-2.5 py-1 rounded-chip bg-surface-elevated text-text-secondary"
@@ -239,14 +239,15 @@ function LibraryTab() {
   const [activeChip,       setActiveChip]       = useState('all');
   const [selectedExercise, setSelectedExercise] = useState(null);
 
-  const { data: exercises = [], isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['exercises'],
     queryFn: () =>
       api.get('/api/exercises').then((r) => r.data.exercises ?? r.data),
     staleTime: 5 * 60 * 1000,
   });
 
-  const filtered = exercises.filter(
+  const safeExercises = Array.isArray(data) ? data : [];
+  const filtered = safeExercises.filter(
     (ex) => matchesFilter(ex, activeChip) && matchesSearch(ex, search)
   );
 
@@ -283,7 +284,7 @@ function LibraryTab() {
           <div className="flex items-center justify-center h-32">
             <p className="text-sm text-text-muted">Loading exercises...</p>
           </div>
-        ) : filtered.length === 0 ? (
+        ) : safeExercises.length === 0 || filtered.length === 0 ? (
           <div className="flex items-center justify-center h-32">
             <p className="text-sm text-text-muted">No exercises found</p>
           </div>
@@ -474,7 +475,7 @@ export default function Coach() {
   return (
     <div className="flex flex-col h-[100dvh] bg-surface">
       {/* Header */}
-      <div className="px-4 pt-10 pb-3 border-b border-surface-elevated">
+      <div className="px-4 pb-3 border-b border-surface-elevated" style={{ paddingTop: 'max(2.5rem, env(safe-area-inset-top))' }}>
         <h1 className="text-2xl font-display font-bold text-text-primary mb-3">
           Coach
         </h1>

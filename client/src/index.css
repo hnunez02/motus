@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --sat: env(safe-area-inset-top);
+  --sab: env(safe-area-inset-bottom);
+}
+
 @layer base {
   * {
     -webkit-tap-highlight-color: transparent;
@@ -26,4 +31,10 @@
     @apply h-2 rounded-full;
     background: #242424;
   }
+}
+
+/* ── react-body-highlighter default fill override ──────────────────────────── */
+.body-map-wrapper svg path,
+.body-map-wrapper svg polygon {
+  transition: fill 400ms ease;
 }

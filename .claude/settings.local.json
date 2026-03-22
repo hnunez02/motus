@@ -8,7 +8,19 @@
       "Bash(find /Users/hectornunez/Motus/client/src/pages -type f -name \"*.jsx\" -o -name \"*.js\" -o -name \"*.tsx\" -o -name \"*.ts\" 2>/dev/null | sort)",
       "Bash(find /Users/hectornunez/Motus/client/src/components -type f \\\\\\( -name \"*.jsx\" -o -name \"*.js\" -o -name \"*.tsx\" -o -name \"*.ts\" \\\\\\) 2>/dev/null | sort)",
       "Bash(find /Users/hectornunez/Motus/server/routes -type f -name \"*.js\" 2>/dev/null | sort)",
-      "Bash(cd /Users/hectornunez/Motus/client && npm install react-markdown)"
+      "Bash(cd /Users/hectornunez/Motus/client && npm install react-markdown)",
+      "Bash(npm run build 2>&1)",
+      "Bash(npm install @capacitor/http 2>&1)",
+      "Bash(npm uninstall @capacitor/http 2>&1)",
+      "Bash(cd /Users/hectornunez/Motus/client && npm run build 2>&1 | tail -40)",
+      "Bash(npm install react-body-highlighter 2>&1 | tail -10)",
+      "Bash(npm install react-body-highlighter 2>&1 | tail -6)",
+      "Bash(npm install react-body-highlighter 2>&1 | grep -E \"added|updated|react-body\")",
+      "Bash(npm install react-body-highlighter 2>&1 | grep -E \"added|react-body|error\")",
+      "Bash(npm install react-body-highlighter 2>&1)",
+      "Bash(pwd && npm install react-body-highlighter --prefix /Users/hectornunez/Motus/client 2>&1)",
+      "Bash(cat /Users/hectornunez/Motus/client/node_modules/react-body-highlighter/package.json | python3 -c \"import sys,json; p=json.load\\(sys.stdin\\); print\\(p.get\\('main',''\\), p.get\\('module',''\\), p.get\\('exports',''\\)\\)\")",
+      "Bash(cd /Users/hectornunez/Motus/server && npx prisma db push 2>&1)"
     ]
   }
 }

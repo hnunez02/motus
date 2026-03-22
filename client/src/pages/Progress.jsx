@@ -92,6 +92,7 @@ function buildVolumeData(weeklyVolume) {
 
 function buildStrengthData(sets, exerciseId) {
   if (!exerciseId) return [];
+  if (!Array.isArray(sets)) return [];
   const byDay = {};
   for (const s of sets) {
     if (s.exerciseId !== exerciseId) continue;
@@ -106,9 +107,10 @@ function buildStrengthData(sets, exerciseId) {
 }
 
 function buildFatigueTrend(sets) {
+  const safeSets = Array.isArray(sets) ? sets : [];
   // Group rpeDelta values by day
   const byDay = {};
-  for (const s of sets) {
+  for (const s of safeSets) {
     const day = s.loggedAt.slice(0, 10);
     if (!byDay[day]) byDay[day] = [];
     if (s.rpeDelta !== null) byDay[day].push(s.rpeDelta);
@@ -132,6 +134,7 @@ function buildFatigueTrend(sets) {
 }
 
 function buildConsistency(sets) {
+  const safeSets = Array.isArray(sets) ? sets : [];
   const now   = new Date();
   const year  = now.getFullYear();
   const month = now.getMonth();
@@ -141,7 +144,7 @@ function buildConsistency(sets) {
 
   // Workout days this month (by day-of-month number)
   const workoutDays = new Set(
-    sets
+    safeSets
       .filter((s) => {
         const d = new Date(s.loggedAt);
         return d.getFullYear() === year && d.getMonth() === month;
@@ -150,7 +153,7 @@ function buildConsistency(sets) {
   );
 
   // Current streak (going backwards from today or yesterday)
-  const allDays = new Set(sets.map((s) => s.loggedAt.slice(0, 10)));
+  const allDays = new Set(safeSets.map((s) => s.loggedAt.slice(0, 10)));
   let streak = 0;
   const cursor = new Date();
   cursor.setHours(12, 0, 0, 0);
@@ -500,7 +503,7 @@ export default function Progress() {
 
   return (
     <div className="min-h-screen bg-surface overflow-y-auto pb-24">
-      <div className="px-4 pt-10 pb-4">
+      <div className="px-4 pb-4" style={{ paddingTop: 'max(2.5rem, env(safe-area-inset-top))' }}>
         <h1 className="text-2xl font-display font-bold text-text-primary">
           Progress
         </h1>
@@ -521,10 +524,22 @@ export default function Progress() {
         </div>
       ) : data ? (
         <div className="px-4 space-y-4">
-          <VolumeChart  weeklyVolume={data.weeklyVolume} />
-          <StrengthChart sets={data.sets} exercises={data.exercises} />
-          <FatigueChart  sets={data.sets} fatigueScore={data.fatigueScore} />
-          <ConsistencyCard sets={data.sets} />
+          {(() => {
+            const safeWeeklyVolume =
+              data?.weeklyVolume && typeof data.weeklyVolume === 'object'
+                ? data.weeklyVolume
+                : {};
+            const safeSets      = Array.isArray(data?.sets)      ? data.sets      : [];
+            const safeExercises = Array.isArray(data?.exercises)  ? data.exercises : [];
+            return (
+              <>
+                <VolumeChart  weeklyVolume={safeWeeklyVolume} />
+                <StrengthChart sets={safeSets} exercises={safeExercises} />
+                <FatigueChart  sets={safeSets} fatigueScore={data?.fatigueScore ?? 0} />
+                <ConsistencyCard sets={safeSets} />
+              </>
+            );
+          })()}
         </div>
       ) : (
         <p className="text-text-muted text-sm px-4">Could not load progress data.</p>

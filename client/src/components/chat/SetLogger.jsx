@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import api from '../../lib/api.js';
 import { RPE_DESCRIPTIONS } from '../../lib/constants.js';
@@ -11,21 +11,33 @@ export default function SetLogger({
   totalSets,
   targetRpe,
   lastWeight,
+  defaultWeight = 135,
+  defaultReps   = 8,
   onLog,
+  onInputChange,
 }) {
-  const [weight,    setWeight]    = useState(lastWeight != null ? String(lastWeight) : '');
-  const [reps,      setReps]      = useState('');
+  const [weight,    setWeight]    = useState(String(lastWeight ?? defaultWeight));
+  const [reps,      setReps]      = useState(String(defaultReps));
   const [rpe,       setRpe]       = useState(targetRpe || 7);
   const [isLogging, setIsLogging] = useState(false);
 
+  // Fire once on mount so WorkoutCard gets initial values immediately
+  useEffect(() => {
+    onInputChange?.(parseFloat(weight) || 0, parseInt(reps) || 0);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const adjustWeight = (delta) => {
-    const current = parseFloat(weight) || 0;
-    setWeight(String(Math.max(0, Math.round((current + delta) * 10) / 10)));
+    const current   = parseFloat(weight) || 0;
+    const newWeight = Math.max(0, current + delta);
+    setWeight(String(newWeight));
+    onInputChange?.(newWeight, parseFloat(reps) || 0);
   };
 
   const adjustReps = (delta) => {
     const current = parseInt(reps) || 0;
-    setReps(String(Math.max(1, current + delta)));
+    const newReps = Math.max(0, current + delta);
+    setReps(String(newReps));
+    onInputChange?.(parseFloat(weight) || 0, newReps);
   };
 
   const handleLog = async () => {
@@ -36,11 +48,12 @@ export default function SetLogger({
     setIsLogging(true);
     try {
       const { data } = await api.post('/api/log/set', {
-        plannedSetId: plannedSetId || null,
-        exerciseId:   exerciseId   || null,
-        actualWeight: w,
-        actualReps:   r,
-        loggedRpe:    rpe,
+        plannedSetId:  plannedSetId  || null,
+        exerciseId:    exerciseId    || null,
+        exerciseName:  exerciseName  || null,
+        actualWeight:  w,
+        actualReps:    r,
+        loggedRpe:     rpe,
       });
 
       onLog({
@@ -74,7 +87,10 @@ export default function SetLogger({
             type="number"
             inputMode="decimal"
             value={weight}
-            onChange={(e) => setWeight(e.target.value)}
+            onChange={(e) => {
+              setWeight(e.target.value);
+              onInputChange?.(parseFloat(e.target.value) || 0, parseInt(reps) || 0);
+            }}
             placeholder="135"
             className="flex-1 min-w-0 bg-surface-elevated text-text-primary text-2xl font-bold
                        text-center py-3 rounded-card border border-surface-elevated
@@ -93,7 +109,10 @@ export default function SetLogger({
             type="number"
             inputMode="numeric"
             value={reps}
-            onChange={(e) => setReps(e.target.value)}
+            onChange={(e) => {
+              setReps(e.target.value);
+              onInputChange?.(parseFloat(weight) || 0, parseInt(e.target.value) || 0);
+            }}
             placeholder="8"
             className="flex-1 min-w-0 bg-surface-elevated text-text-primary text-2xl font-bold
                        text-center py-3 rounded-card border border-surface-elevated

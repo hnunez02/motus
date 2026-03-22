@@ -1,8 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import confetti from 'canvas-confetti';
 import SetLogger from './SetLogger.jsx';
 import AtlasAvatar from '../ui/AtlasAvatar.jsx';
+import AtlasAnimator, { useAtlasEmotion } from '../AtlasAnimator.jsx';
+import FeedbackRing from '../FeedbackRing.jsx';
+import WorkoutComplete from '../WorkoutComplete.jsx';
+import ExerciseMusclePreview from '../ExerciseMusclePreview.jsx';
+import { useMuscleIntensity } from '../MuscleMap.jsx';
+import { getMusclesForExercise } from '../../utils/exerciseMuscles.js';
 
 // ── helpers ────────────────────────────────────────────────────────────
 function fmt(totalSeconds) {
@@ -11,18 +16,10 @@ function fmt(totalSeconds) {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
-function fireConfetti() {
-  confetti({
-    particleCount: 160,
-    spread: 72,
-    origin: { y: 0.6 },
-    colors: ['#E8593C', '#F2A623', '#F5F5F5', '#B03A22'],
-  });
-}
-
 // ── WorkoutCard ────────────────────────────────────────────────────────
 export default function WorkoutCard({ session, onComplete }) {
-  const exercises = session?.exercises || [];
+  const safeExercises = Array.isArray(session?.exercises) ? session.exercises : [];
+  const exercises = safeExercises;
 
   const [currentExIdx,   setCurrentExIdx]   = useState(0);
   const [currentSetIdx,  setCurrentSetIdx]  = useState(0);
@@ -36,6 +33,42 @@ export default function WorkoutCard({ session, onComplete }) {
   const [swapped,        setSwapped]        = useState({});    // exIdx → name
   const [liveSecs,       setLiveSecs]       = useState(0);
   const [sessionStart]                      = useState(() => Date.now());
+
+  // ── Animation state ────────────────────────────────────────────────
+  const [lastSetRPE,    setLastSetRPE]    = useState(0);
+  const [setJustLogged, setSetJustLogged] = useState(false);
+  const [scanEmotion,   setScanEmotion]   = useState('thinking'); // brief scan on first load
+  const scanTimerRef = useRef(null);
+
+  // ── Live input tracking (for muscle preview intensity) ──────────────
+  const [liveWeight, setLiveWeight] = useState(0);
+  const [liveReps,   setLiveReps]   = useState(0);
+
+  // Atlas "scanning" effect: thinking → encouraging when exercise changes
+  useEffect(() => {
+    clearTimeout(scanTimerRef.current);
+    setScanEmotion('thinking');
+    scanTimerRef.current = setTimeout(() => {
+      setScanEmotion('encouraging');
+      scanTimerRef.current = setTimeout(() => setScanEmotion(null), 1500);
+    }, 400);
+    return () => clearTimeout(scanTimerRef.current);
+  }, [currentExIdx]);
+
+  // Derive Atlas emotion — scan overrides RPE-based state; celebration wins always
+  const baseEmotion  = useAtlasEmotion(lastSetRPE, false);
+  const atlasEmotion = phase === 'complete'
+    ? 'celebration'
+    : scanEmotion ?? baseEmotion;
+
+  // Compute muscle intensity from logged sets
+  const { muscleIntensity } = useMuscleIntensity(loggedSets);
+
+  // ── debug mount log ────────────────────────────────────────────────
+  useEffect(() => {
+    console.log('WorkoutCard session:', JSON.stringify(session));
+    console.log('Exercises count:', safeExercises.length);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── live session duration ──────────────────────────────────────────
   useEffect(() => {
@@ -87,9 +120,15 @@ export default function WorkoutCard({ session, onComplete }) {
         setIdx:       currentSetIdx,
         exerciseName: swapped[currentExIdx] || ex?.name,
         targetRpe:    ex?.rpe,
+        rpeDelta:     (setData.rpe || 0) - (ex?.rpe || 0),
       },
     ];
     setLoggedSets(newLoggedSets);
+
+    // Trigger feedback ring + update Atlas emotion
+    setLastSetRPE(setData.rpe || 0);
+    setSetJustLogged(true);
+    setTimeout(() => setSetJustLogged(false), 100); // reset so next set re-triggers
 
     const totalSets   = ex?.sets || 3;
     const lastSetOfEx = currentSetIdx + 1 >= totalSets;
@@ -97,7 +136,6 @@ export default function WorkoutCard({ session, onComplete }) {
 
     if (lastSetOfEx && lastEx) {
       setPhase('complete');
-      fireConfetti();
     } else {
       const nextExIdx  = lastSetOfEx ? currentExIdx + 1 : currentExIdx;
       const nextSetIdx = lastSetOfEx ? 0              : currentSetIdx + 1;
@@ -110,6 +148,14 @@ export default function WorkoutCard({ session, onComplete }) {
 
   // ── derived ────────────────────────────────────────────────────────
   const currentEx    = exercises[currentExIdx];
+
+  // Reset live inputs when exercise changes (must be after currentEx declaration)
+  useEffect(() => {
+    const defaultW = 135;
+    const defaultR = parseInt(String(currentEx?.reps ?? '').split('-')[0]) || 8;
+    setLiveWeight(defaultW);
+    setLiveReps(defaultR);
+  }, [currentEx?.name]); // eslint-disable-line react-hooks/exhaustive-deps
   const effectiveName = swapped[currentExIdx] || currentEx?.name;
   const totalExSets  = currentEx?.sets || 3;
   const pendingName  = pending
@@ -118,65 +164,15 @@ export default function WorkoutCard({ session, onComplete }) {
 
   // ── COMPLETION SCREEN ──────────────────────────────────────────────
   if (phase === 'complete') {
-    const totalVolume  = loggedSets.reduce((s, l) => s + l.weight * l.reps, 0);
-    const durationMin  = Math.round((Date.now() - sessionStart) / 60000);
-    const avgRpe       = loggedSets.length
-      ? (loggedSets.reduce((s, l) => s + l.rpe, 0) / loggedSets.length).toFixed(1)
-      : '—';
-    const targetRpeAvg = exercises.length
-      ? (exercises.reduce((s, e) => s + (e.rpe || 0), 0) / exercises.length).toFixed(1)
-      : '—';
-    const avgDelta = loggedSets.length
-      ? loggedSets.reduce((s, l) => s + (l.rpeDelta || 0), 0) / loggedSets.length
-      : 0;
-
-    const adjustNote = avgDelta > 1
-      ? "Today ran harder than planned — nicely ground out. I'll pull load back ~5% next session and rebuild through progressive overload. Recovery is where growth happens."
-      : avgDelta < -1
-        ? "You had plenty in reserve — excellent! I'll push load up ~5% next session to keep the stimulus near your MAV. The adaptation is already in motion."
-        : "RPE tracking was right on target. The program is perfectly calibrated. I'll add a small volume bump next week to keep the adaptation curve climbing. 🦉";
-
     return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="flex flex-col items-center justify-center min-h-[100dvh] bg-surface px-6 text-center"
-      >
-        <AtlasAvatar mood="celebrating" size="lg" />
-
-        <h1 className="text-3xl font-display font-bold text-text-primary mt-6 mb-1">
-          Session Complete!
-        </h1>
-        <p className="text-text-secondary text-sm mb-8">{session.sessionTitle}</p>
-
-        <div className="grid grid-cols-3 gap-3 w-full mb-8">
-          <StatCard
-            label="Volume (Total Weight)"
-            value={totalVolume >= 1000 ? `${(totalVolume / 1000).toFixed(1)}k` : totalVolume}
-            unit="lbs"
-          />
-          <StatCard label="Duration"           value={durationMin} unit="min" />
-          <StatCard label="Avg RPE (Effort)"   value={avgRpe}      unit={`/ ${targetRpeAvg}`} />
-        </div>
-
-        <div className="w-full bg-surface-card rounded-card p-4 mb-8 text-left">
-          <div className="flex items-center gap-2 mb-2">
-            <AtlasAvatar mood="neutral" size="sm" />
-            <span className="text-[10px] font-mono text-text-muted uppercase tracking-widest">
-              What Atlas adjusted
-            </span>
-          </div>
-          <p className="text-sm text-text-secondary leading-relaxed">{adjustNote}</p>
-        </div>
-
-        <motion.button
-          whileTap={{ scale: 0.97 }}
-          onClick={onComplete}
-          className="w-full py-4 rounded-card bg-brand text-white font-semibold text-base"
-        >
-          Back to Home
-        </motion.button>
-      </motion.div>
+      <WorkoutComplete
+        loggedSets={loggedSets}
+        exercises={exercises}
+        sessionTitle={session.sessionTitle}
+        sessionStart={sessionStart}
+        muscleIntensity={muscleIntensity}
+        onDone={onComplete}
+      />
     );
   }
 
@@ -188,6 +184,7 @@ export default function WorkoutCard({ session, onComplete }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="flex flex-col items-center justify-center min-h-[100dvh] bg-surface px-6"
+        style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         <p className="text-[10px] font-mono text-text-muted uppercase tracking-widest mb-8">Rest</p>
 
@@ -239,19 +236,54 @@ export default function WorkoutCard({ session, onComplete }) {
     <div className="min-h-[100dvh] bg-surface overflow-y-auto pb-10">
 
       {/* Header */}
-      <div className="px-4 pt-10 pb-4 border-b border-surface-elevated flex items-center justify-between">
-        <div>
+      <div
+        className="px-4 pb-4 border-b border-surface-elevated"
+        style={{ paddingTop: 'max(2.5rem, env(safe-area-inset-top))' }}
+      >
+        <div className="flex items-center justify-between mb-2">
           <p className="text-[10px] font-mono text-text-muted tabular-nums">{fmt(liveSecs)}</p>
-          <h2 className="text-lg font-display font-bold text-text-primary leading-tight">
-            {session.sessionTitle}
-          </h2>
+          <span className="text-xs text-text-muted">
+            {currentExIdx + 1} / {exercises.length} exercises
+          </span>
         </div>
-        <span className="text-xs text-text-muted">
-          {currentExIdx + 1} / {exercises.length} exercises
-        </span>
+
+        {/* Atlas left, exercise name right */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: '12px 16px 0' }}>
+          <div style={{ width: 48, height: 48, flexShrink: 0, overflow: 'hidden', position: 'relative' }}>
+            <AtlasAnimator emotion={atlasEmotion} />
+            <FeedbackRing triggered={setJustLogged} rpe={lastSetRPE} size={72} />
+          </div>
+          <div style={{ minWidth: 0, paddingTop: 4 }}>
+            <h2 className="text-xl font-bold text-white leading-tight">{effectiveName}</h2>
+            <p className="text-sm text-text-muted mt-0.5">{session.sessionTitle}</p>
+          </div>
+        </div>
       </div>
 
       <div className="px-4 pt-5">
+        {/* Form cue */}
+        {currentEx?.formCue && (
+          <div className="bg-brand/10 border border-brand/20 rounded-card px-3 py-2.5 mb-5">
+            <p className="text-xs text-brand leading-relaxed">💡 {currentEx.formCue}</p>
+          </div>
+        )}
+
+        {/* Muscle preview — re-animates on each exercise change via key */}
+        {(() => {
+          const { primary, secondary } = getMusclesForExercise(effectiveName);
+          return primary.length > 0 ? (
+            <ExerciseMusclePreview
+              key={effectiveName}
+              exerciseName={effectiveName}
+              primaryMuscles={primary}
+              secondaryMuscles={secondary}
+              currentWeight={liveWeight}
+              currentReps={liveReps}
+              targetReps={parseInt(String(currentEx?.reps ?? '').split('-').at(-1)) || undefined}
+            />
+          ) : null;
+        })()}
+
         {/* Set progress header */}
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-mono text-text-muted uppercase tracking-wider">
@@ -278,20 +310,9 @@ export default function WorkoutCard({ session, onComplete }) {
           ))}
         </div>
 
-        {/* Exercise name */}
-        <h2 className="text-2xl font-display font-bold text-text-primary leading-tight mb-1">
-          {effectiveName}
-        </h2>
         <p className="text-sm text-text-muted mb-5">
           {currentEx?.sets} sets · {currentEx?.reps} reps · Rest {currentEx?.restSeconds}s
         </p>
-
-        {/* Form cue */}
-        {currentEx?.formCue && (
-          <div className="bg-brand/10 border border-brand/20 rounded-card px-3 py-2.5 mb-5">
-            <p className="text-xs text-brand leading-relaxed">💡 {currentEx.formCue}</p>
-          </div>
-        )}
 
         {/* SetLogger */}
         <SetLogger
@@ -305,7 +326,13 @@ export default function WorkoutCard({ session, onComplete }) {
           lastWeight={
             loggedSets.filter((s) => s.exerciseIdx === currentExIdx).at(-1)?.weight
           }
+          defaultWeight={liveWeight || 135}
+          defaultReps={parseInt(String(currentEx?.reps ?? '').split('-')[0]) || 8}
           onLog={handleSetLogged}
+          onInputChange={(w, r) => {
+            setLiveWeight(w);
+            setLiveReps(r);
+          }}
         />
 
         {/* Why this exercise? accordion */}
@@ -452,13 +479,3 @@ export default function WorkoutCard({ session, onComplete }) {
   );
 }
 
-// ── StatCard ───────────────────────────────────────────────────────────
-function StatCard({ label, value, unit }) {
-  return (
-    <div className="bg-surface-card rounded-card p-3 text-center">
-      <p className="text-[10px] text-text-muted mb-1 uppercase tracking-wider">{label}</p>
-      <p className="text-xl font-bold text-brand">{value}</p>
-      <p className="text-[10px] text-text-muted">{unit}</p>
-    </div>
-  );
-}

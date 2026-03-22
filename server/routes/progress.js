@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { requireAuth } from '../middleware/auth.js';
 import { checkDeloadTrigger } from '../services/adaptiveEngine.js';
+import { getMusclesForExercise } from '../utils/exerciseMuscles.js';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -54,10 +55,12 @@ router.get('/summary', requireAuth, async (req, res, next) => {
 
     const sets = rawSets.map((s) => {
       const ex = s.plannedSet?.exercise ?? orphanMap.get(s.exerciseId) ?? null;
+      // Prefer direct exerciseName field (set by chat-flow logger), fall back to relation
+      const exerciseName = s.exerciseName ?? ex?.name ?? null;
       return {
         id: s.id,
-        exerciseId:   ex?.id   ?? s.exerciseId ?? null,
-        exerciseName: ex?.name ?? null,
+        exerciseId:   ex?.id ?? s.exerciseId ?? null,
+        exerciseName,
         actualWeight: s.actualWeight,
         actualReps:   s.actualReps,
         loggedRpe:    s.loggedRpe,
@@ -66,11 +69,34 @@ router.get('/summary', requireAuth, async (req, res, next) => {
       };
     });
 
-    // Distinct exercises for the strength chart dropdown
+    // Compute weekly volume from exercise names via muscle map
+    const weeklyVolumeMap = {};
+    for (const s of sets) {
+      const muscles = getMusclesForExercise(s.exerciseName);
+      for (const muscle of muscles) {
+        weeklyVolumeMap[muscle] = (weeklyVolumeMap[muscle] || 0) + 1;
+      }
+    }
+    const weeklyVolume = Object.keys(weeklyVolumeMap).length > 0
+      ? weeklyVolumeMap
+      : (profile?.weeklyVolume ?? {});
+
+    // Compute best estimated 1RM per exercise (Epley: w * (1 + r/30))
+    const oneRMMap = {};
+    for (const s of sets) {
+      if (!s.exerciseName || !s.actualWeight || !s.actualReps) continue;
+      const e1rm = s.actualWeight * (1 + s.actualReps / 30);
+      if (!oneRMMap[s.exerciseName] || e1rm > oneRMMap[s.exerciseName]) {
+        oneRMMap[s.exerciseName] = Math.round(e1rm);
+      }
+    }
+    const oneRMExercises = Object.entries(oneRMMap).map(([name, e1rm]) => ({ name, e1rm }));
+
+    // Distinct exercises for the strength chart dropdown (union of both sources)
     const exerciseMap = new Map();
     for (const s of sets) {
-      if (s.exerciseId && s.exerciseName && !exerciseMap.has(s.exerciseId)) {
-        exerciseMap.set(s.exerciseId, { id: s.exerciseId, name: s.exerciseName });
+      if (s.exerciseName && !exerciseMap.has(s.exerciseName)) {
+        exerciseMap.set(s.exerciseName, { id: s.exerciseId, name: s.exerciseName });
       }
     }
 
@@ -83,11 +109,12 @@ router.get('/summary', requireAuth, async (req, res, next) => {
       : { shouldDeload: false, reason: null };
 
     res.json({
-      weeklyVolume: profile?.weeklyVolume ?? {},
+      weeklyVolume,
       fatigueScore: profile?.fatigueScore ?? 0,
       deload,
       sets,
       exercises: Array.from(exerciseMap.values()),
+      oneRMExercises,
     });
   } catch (err) {
     next(err);

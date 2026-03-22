@@ -3,7 +3,15 @@
   "appName": "Motus",
   "webDir": "dist",
   "server": {
-    "androidScheme": "https"
+    "androidScheme": "https",
+    "allowNavigation": [
+      "motus-production.up.railway.app"
+    ]
+  },
+  "ios": {
+    "allowsLinkPreview": false,
+    "scrollEnabled": true,
+    "limitsNavigationsToAppBoundDomains": false
   },
   "plugins": {
     "SplashScreen": {

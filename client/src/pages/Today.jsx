@@ -1,12 +1,26 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import api from '../lib/api.js';
 import { useAI } from '../hooks/useAI.js';
 import ChatBubble from '../components/chat/ChatBubble.jsx';
 import WorkoutCard from '../components/chat/WorkoutCard.jsx';
 import AtlasAvatar from '../components/ui/AtlasAvatar.jsx';
+import AtlasAnimator from '../components/AtlasAnimator.jsx';
+import MuscleMap, { SLUG_LABEL } from '../components/MuscleMap.jsx';
 import { MUSCLE_GROUPS } from '../lib/constants.js';
+
+// Extended label lookup: covers both MUSCLE_GROUPS ids and pkg-mapped ids
+const MUSCLE_LABEL = {
+  chest: 'Chest', shoulders: 'Shoulders', triceps: 'Triceps',
+  back: 'Back', biceps: 'Biceps', rear_delt: 'Rear Delts',
+  quads: 'Quads', hamstrings: 'Hamstrings', glutes: 'Glutes',
+  calves: 'Calves', core: 'Core',
+  // pkg-mapped ids
+  front_delts: 'Front Delts', rear_delts: 'Rear Delts', lats: 'Lats',
+  traps: 'Traps', hip_flexors: 'Hip Flexors', lower_back: 'Lower Back',
+  abs: 'Abs', obliques: 'Obliques', forearm: 'Forearms',
+};
 
 // ── message factory helpers ────────────────────────────────────────────
 let _msgId = 0;
@@ -55,17 +69,37 @@ const INIT_CTX = {
 export default function Today() {
   const { generateSession } = useAI();
   const scrollRef = useRef(null);
+  const prefersReduced = useReducedMotion();
 
-  const [messages, setMessages] = useState([]);
-  const [ctx, setCtx] = useState(INIT_CTX);
+  const [messages,      setMessages]      = useState([]);
+  const [ctx,           setCtx]           = useState(INIT_CTX);
+  const [atlasEmotion,  setAtlasEmotion]  = useState('idle');
+  const atlasTimerRef = useRef(null);
 
   // Track whether generation has been fired to prevent double-run in StrictMode
   const generationFiredRef = useRef(false);
 
+  // ── debug mount log ───────────────────────────────────────────────
+  useEffect(() => {
+    fetch('https://motus-production.up.railway.app/api/health')
+      .then(r => r.json())
+      .then(d => console.log('Raw fetch health check:', d))
+      .catch(e => console.error('Raw fetch health check failed:', e.message));
+    console.log('Today mounted, fetching fatigue...');
+    console.log('API baseURL:', import.meta.env.VITE_API_URL);
+  }, []);
+
   // ── fetch fatigue on mount ────────────────────────────────────────
   const { data: fatigueData } = useQuery({
     queryKey: ['fatigue'],
-    queryFn: () => api.get('/api/log/fatigue').then((r) => r.data),
+    queryFn: () =>
+      api.get('/api/log/fatigue').then((r) => {
+        console.log('Fatigue response:', r.data);
+        return r.data;
+      }).catch((error) => {
+        console.error('Fatigue fetch error:', error.message, error.response?.status);
+        throw error;
+      }),
   });
 
   // ── boot conversation once fatigue resolves ───────────────────────
@@ -161,19 +195,18 @@ export default function Today() {
     [addMessage, atlasReply]
   );
 
-  const toggleMuscle = useCallback((id) => {
-    setCtx((c) => ({
-      ...c,
-      muscleGroups: c.muscleGroups.includes(id)
-        ? c.muscleGroups.filter((m) => m !== id)
-        : [...c.muscleGroups, id],
-    }));
+  // Receives full slug array from MuscleMap's internal state on every toggle
+  const handleMuscleSelect = useCallback((slugArray) => {
+    setCtx((c) => ({ ...c, muscleGroups: slugArray }));
+    clearTimeout(atlasTimerRef.current);
+    setAtlasEmotion('encouraging');
+    atlasTimerRef.current = setTimeout(() => setAtlasEmotion('idle'), 1500);
   }, []);
 
   const handleMuscleGroupsConfirm = useCallback(async () => {
+    // ctx.muscleGroups now holds pkg slugs from MuscleMap's internal state
     const labels = ctx.muscleGroups
-      .map((id) => MUSCLE_GROUPS.find((m) => m.id === id)?.label)
-      .filter(Boolean)
+      .map((slug) => SLUG_LABEL[slug] || MUSCLE_LABEL[slug] || slug)
       .join(', ');
     addMessage(userBubble(labels));
     await atlasReply("What's the goal for today?");
@@ -227,6 +260,17 @@ export default function Today() {
           cardioType:   c.cardioType,
           duration:     c.duration,
         });
+
+        if (
+          !result?.exercises ||
+          !Array.isArray(result.exercises) ||
+          result.exercises.length === 0
+        ) {
+          await atlasReply("I had trouble building that session. Let's try again.");
+          generationFiredRef.current = false;
+          setCtx((c) => ({ ...c, step: 'modality' }));
+          return;
+        }
 
         setCtx((prev) => ({ ...prev, generatedPlan: result, step: 'done' }));
       } catch (err) {
@@ -282,11 +326,11 @@ export default function Today() {
 
       case 'muscle_groups':
         return (
-          <MuscleSelectInput
-            muscles={filteredMuscles}
+          <MuscleMapSelector
             selected={ctx.muscleGroups}
-            onToggle={toggleMuscle}
+            onMuscleSelect={handleMuscleSelect}
             onConfirm={handleMuscleGroupsConfirm}
+            prefersReduced={prefersReduced}
           />
         );
 
@@ -305,8 +349,17 @@ export default function Today() {
 
       case 'generating':
         return (
-          <div className="flex flex-col items-center py-10 gap-4">
-            <AtlasAvatar mood="thinking" size="lg" />
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            paddingBottom: 80,
+            gap: 16,
+          }}>
+            <div style={{ width: 120, height: 120 }}>
+              <AtlasAnimator emotion="thinking" />
+            </div>
             <p className="text-text-secondary text-sm font-mono animate-pulse">
               Atlas is building your session... 🦉
             </p>
@@ -332,8 +385,10 @@ export default function Today() {
   return (
     <div className="flex flex-col h-[100dvh] bg-surface">
       {/* ── header ────────────────────────────────────────────────── */}
-      <div className="flex-none px-4 pt-10 pb-3 flex items-center gap-3 border-b border-surface-elevated">
-        <AtlasAvatar mood="neutral" size="sm" />
+      <div className="flex-none px-4 pb-3 flex items-center gap-3 border-b border-surface-elevated" style={{ paddingTop: 'max(2.5rem, env(safe-area-inset-top))' }}>
+        <div style={{ width: 32, height: 32, flexShrink: 0 }}>
+          <AtlasAnimator emotion={atlasEmotion} />
+        </div>
         <div>
           <p className="text-[10px] text-text-muted uppercase tracking-widest font-mono leading-none mb-0.5">
             Atlas
@@ -418,7 +473,51 @@ function ChipRow({ chips, onSelect }) {
   );
 }
 
+// ── MuscleMapSelector ──────────────────────────────────────────────────
+// Checklist:
+// [ ] Flow 1: Tapping muscle highlights it teal, chip appears below, deselect works both ways
+// [ ] Flow 1: "Build my workout" button disabled with 0 muscles selected, enabled with 1+
+// [ ] Flow 1: Selected muscles passed correctly to Atlas API prompt
+// [ ] Both flows: reduced motion guard applied
+// Checklist:
+// [ ] Flow 1: Tapping muscle (SVG or button) highlights it teal; deselect works both ways
+// [ ] Flow 1: "Build my workout" button disabled with 0 muscles selected, enabled with 1+
+// [ ] Flow 1: Selected muscles passed correctly to Atlas API prompt
+// [ ] Both flows: reduced motion guard applied
+function MuscleMapSelector({ selected, onMuscleSelect, onConfirm, prefersReduced }) {
+  return (
+    <div className="space-y-3 px-1 pb-2">
+      {/* Hint */}
+      <p className="text-[11px] text-text-muted text-center font-mono">
+        Tap muscles to select
+      </p>
+
+      {/* MuscleMap owns selection state internally; it renders the button grid + chips */}
+      <MuscleMap
+        mode="selection"
+        onMuscleSelect={onMuscleSelect}
+      />
+
+      {/* Build my workout — sticky so it's always reachable */}
+      <div style={{ position: 'sticky', bottom: 0, background: '#111', paddingTop: 12, paddingBottom: 8, zIndex: 10 }}>
+        <motion.button
+          animate={{ opacity: selected.length > 0 ? 1 : 0.35 }}
+          transition={{ duration: 0.2 }}
+          disabled={selected.length === 0}
+          whileTap={selected.length > 0 && !prefersReduced ? { scale: 0.97 } : undefined}
+          onClick={selected.length > 0 ? onConfirm : undefined}
+          className="w-full py-3.5 rounded-card bg-brand text-white font-semibold text-sm
+                     disabled:cursor-not-allowed"
+        >
+          Build my workout →
+        </motion.button>
+      </div>
+    </div>
+  );
+}
+
 // ── MuscleSelectInput ──────────────────────────────────────────────────
+// Kept for fallback / split-based flows — not used in the muscle_groups step anymore.
 function MuscleSelectInput({ muscles, selected, onToggle, onConfirm }) {
   return (
     <div className="space-y-3 px-1 pb-2">
