@@ -78,6 +78,7 @@ model Exercise {
   category      String
   modality      String
   equipment     String[]
+  environment   String[]    @default([])
   formCues      String[]
   videoUrl      String?
   embedding     Unsupported("vector(1536)")?

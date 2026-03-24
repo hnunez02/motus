@@ -10,7 +10,7 @@ const prisma = new PrismaClient();
 // POST /api/ai/generate-session
 router.post('/generate-session', requireAuth, async (req, res, next) => {
   try {
-    const { modality, split, muscleGroups = [], goal, cardioType } = req.body;
+    const { modality, split, muscleGroups = [], goal, cardioType, environment } = req.body;
     const userId = req.user.id;
 
     // 1. Fetch user + perfProfile
@@ -48,7 +48,7 @@ router.post('/generate-session', requireAuth, async (req, res, next) => {
         fatigueScore: user.perfProfile?.fatigueScore ?? 0,
         weeklyVolume: user.perfProfile?.weeklyVolume ?? {},
       },
-      sessionRequest: { modality, split, muscleGroups, goal, cardioType },
+      sessionRequest: { modality, split, muscleGroups, goal, cardioType, environment },
       recentPerformance: summarizeRecentSets(recentSets),
       relevantCitations,
     };

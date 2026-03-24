@@ -10,6 +10,7 @@ const EXERCISES = [
     category: 'compound',
     modality: 'lift',
     equipment: ['barbell', 'bench'],
+    environment: ['gym'],
     formCues: [
       'Retract and depress your scapulae before unracking',
       'Drive your feet into the floor throughout the press',
@@ -23,6 +24,7 @@ const EXERCISES = [
     category: 'compound',
     modality: 'lift',
     equipment: ['dumbbells', 'bench'],
+    environment: ['gym', 'home'],
     formCues: [
       'Set bench to 30-45 degrees — higher kills chest recruitment',
       'Touch dumbbells at the top to maximize peak contraction',
@@ -36,6 +38,7 @@ const EXERCISES = [
     category: 'compound',
     modality: 'lift',
     equipment: ['barbell'],
+    environment: ['gym'],
     formCues: [
       'Start bar at upper chest, elbows slightly in front of bar',
       'Press bar in a slight arc — back, not straight up',
@@ -49,6 +52,7 @@ const EXERCISES = [
     category: 'isolation',
     modality: 'lift',
     equipment: ['cables'],
+    environment: ['gym'],
     formCues: [
       'Slight forward lean — hinge at hips, not waist',
       'Maintain a slight elbow bend throughout the movement',
@@ -62,6 +66,7 @@ const EXERCISES = [
     category: 'isolation',
     modality: 'lift',
     equipment: ['dumbbells'],
+    environment: ['gym', 'home'],
     formCues: [
       'Lead with your elbows, not your hands',
       'Slight forward lean and internal rotation — thumbs slightly down',
@@ -75,6 +80,7 @@ const EXERCISES = [
     category: 'isolation',
     modality: 'lift',
     equipment: ['cables'],
+    environment: ['gym'],
     formCues: [
       'Keep elbows pinned to your sides — don\'t let them flare',
       'Full extension at the bottom — squeeze hard',
@@ -88,6 +94,7 @@ const EXERCISES = [
     category: 'compound',
     modality: 'lift',
     equipment: ['barbell', 'bench'],
+    environment: ['gym'],
     formCues: [
       'Grip just inside shoulder width — going too close stresses wrists',
       'Tuck elbows to roughly 45 degrees — not flared, not pinned',
@@ -101,6 +108,7 @@ const EXERCISES = [
     category: 'compound',
     modality: 'lift',
     equipment: ['dip_bars'],
+    environment: ['gym', 'home'],
     formCues: [
       'Forward lean shifts emphasis to chest, upright hits triceps more',
       'Lower until upper arms are parallel to floor — full ROM',
@@ -114,6 +122,7 @@ const EXERCISES = [
     category: 'compound',
     modality: 'lift',
     equipment: ['machine'],
+    environment: ['gym'],
     formCues: [
       'Adjust seat so handles are at mid-chest height',
       'Retract scapulae and hold them back throughout',
@@ -127,6 +136,7 @@ const EXERCISES = [
     category: 'isolation',
     modality: 'lift',
     equipment: ['cables', 'bench'],
+    environment: ['gym'],
     formCues: [
       'Set pulleys low — cables should pull upward toward chest',
       'Keep a long arc — imagine hugging a barrel',
@@ -142,6 +152,7 @@ const EXERCISES = [
     category: 'compound',
     modality: 'lift',
     equipment: ['barbell'],
+    environment: ['gym'],
     formCues: [
       'Hinge to roughly 45 degrees — more upright hits upper back',
       'Pull bar to lower chest/belly button — not upper chest',
@@ -155,6 +166,7 @@ const EXERCISES = [
     category: 'compound',
     modality: 'lift',
     equipment: ['pull_up_bar', 'belt'],
+    environment: ['gym', 'home'],
     formCues: [
       'Dead hang at the bottom — full shoulder depression',
       'Pull elbows down and back — not just up',
@@ -168,6 +180,7 @@ const EXERCISES = [
     category: 'compound',
     modality: 'lift',
     equipment: ['cables'],
+    environment: ['gym'],
     formCues: [
       'Lean slightly forward at start — maximize lat stretch',
       'Drive elbows back past torso for full contraction',
@@ -181,6 +194,7 @@ const EXERCISES = [
     category: 'compound',
     modality: 'lift',
     equipment: ['cables'],
+    environment: ['gym'],
     formCues: [
       'Slight lean back — pull bar to upper chest, not behind neck',
       'Initiate with lat depression before bending elbows',
@@ -194,6 +208,7 @@ const EXERCISES = [
     category: 'isolation',
     modality: 'lift',
     equipment: ['cables'],
+    environment: ['gym'],
     formCues: [
       'Set pulley at face height or slightly above',
       'Pull rope to forehead — external rotation at peak',
@@ -207,6 +222,7 @@ const EXERCISES = [
     category: 'isolation',
     modality: 'lift',
     equipment: ['barbell'],
+    environment: ['gym'],
     formCues: [
       'Elbows stay at your sides — no swinging',
       'Supinate at the top — turn pinkies up for peak contraction',
@@ -220,6 +236,7 @@ const EXERCISES = [
     category: 'isolation',
     modality: 'lift',
     equipment: ['dumbbells'],
+    environment: ['gym', 'home'],
     formCues: [
       'Neutral grip — thumbs pointing up throughout',
       'Targets brachialis and brachioradialis more than supinated curl',
@@ -233,6 +250,7 @@ const EXERCISES = [
     category: 'isolation',
     modality: 'lift',
     equipment: ['dumbbells', 'bench'],
+    environment: ['gym', 'home'],
     formCues: [
       'Set bench to 45-60 degrees — creates maximal stretch on long head',
       'Arms hang straight down at start — don\'t curl from the hip',
@@ -246,6 +264,7 @@ const EXERCISES = [
     category: 'compound',
     modality: 'lift',
     equipment: ['barbell'],
+    environment: ['gym'],
     formCues: [
       'Landmine setup — bar anchored in corner',
       'Stagger stance, pull to hip with high elbow',
@@ -259,6 +278,7 @@ const EXERCISES = [
     category: 'isolation',
     modality: 'lift',
     equipment: ['cables'],
+    environment: ['gym'],
     formCues: [
       'Face away from machine, arms overhead, slight elbow bend',
       'Pull down in arc — feel lats stretch at the top',
@@ -274,6 +294,7 @@ const EXERCISES = [
     category: 'compound',
     modality: 'lift',
     equipment: ['barbell', 'squat_rack'],
+    environment: ['gym'],
     formCues: [
       'Bar sits on upper traps (high bar) or lower traps (low bar)',
       'Knees track over toes — push them out',
@@ -287,6 +308,7 @@ const EXERCISES = [
     category: 'compound',
     modality: 'lift',
     equipment: ['barbell'],
+    environment: ['gym'],
     formCues: [
       'Push hips back — not down. This is a hip hinge, not a squat',
       'Bar stays close to legs throughout the descent',
@@ -300,6 +322,7 @@ const EXERCISES = [
     category: 'compound',
     modality: 'lift',
     equipment: ['machine'],
+    environment: ['gym'],
     formCues: [
       'High foot placement targets glutes/hamstrings more',
       'Low foot placement increases quad emphasis',
@@ -313,6 +336,7 @@ const EXERCISES = [
     category: 'compound',
     modality: 'lift',
     equipment: ['dumbbells', 'bench'],
+    environment: ['gym', 'home'],
     formCues: [
       'Rear foot elevated — front foot far enough forward to keep shin vertical',
       'Sink straight down — don\'t lunge forward',
@@ -326,6 +350,7 @@ const EXERCISES = [
     category: 'isolation',
     modality: 'lift',
     equipment: ['machine'],
+    environment: ['gym'],
     formCues: [
       'Lying leg curl provides stretch at hip — best for hypertrophy',
       'Curl to full contraction — hamstrings should cramp slightly',
@@ -339,6 +364,7 @@ const EXERCISES = [
     category: 'compound',
     modality: 'lift',
     equipment: ['barbell', 'bench'],
+    environment: ['gym'],
     formCues: [
       'Bar sits on hip flexors — pad for comfort',
       'Chin tucked, ribs down — posterior pelvic tilt at top',
@@ -352,6 +378,7 @@ const EXERCISES = [
     category: 'compound',
     modality: 'lift',
     equipment: ['dumbbells'],
+    environment: ['gym', 'home'],
     formCues: [
       'Long stride increases glute recruitment',
       'Keep torso upright — resist forward lean',
@@ -365,6 +392,7 @@ const EXERCISES = [
     category: 'isolation',
     modality: 'lift',
     equipment: ['machine'],
+    environment: ['gym'],
     formCues: [
       'Full extension — squeeze quads at top for 1 second',
       'Slow eccentric — resist the weight down',
@@ -378,6 +406,7 @@ const EXERCISES = [
     category: 'isolation',
     modality: 'lift',
     equipment: ['machine'],
+    environment: ['gym'],
     formCues: [
       'Full stretch at the bottom — dorsiflexion is key',
       'Rise up on the big toe — not the pinky',
@@ -391,6 +420,7 @@ const EXERCISES = [
     category: 'compound',
     modality: 'lift',
     equipment: ['machine'],
+    environment: ['gym'],
     formCues: [
       'Feet lower on platform = more quad emphasis',
       'Full depth — break parallel',
@@ -406,6 +436,7 @@ const EXERCISES = [
     category: 'compound',
     modality: 'cardio',
     equipment: ['treadmill'],
+    environment: ['gym'],
     formCues: [
       'Maintain upright posture — slight forward lean from ankles',
       'Land midfoot, not heel — reduces impact forces',
@@ -419,6 +450,7 @@ const EXERCISES = [
     category: 'compound',
     modality: 'cardio',
     equipment: ['bike'],
+    environment: ['gym'],
     formCues: [
       'Seat height: slight knee bend at bottom of pedal stroke',
       'Pedal in full circles — don\'t just push down',
@@ -432,6 +464,7 @@ const EXERCISES = [
     category: 'compound',
     modality: 'cardio',
     equipment: ['rowing_machine'],
+    environment: ['gym'],
     formCues: [
       'Drive sequence: legs → hips → arms. Return: arms → hips → legs',
       'Ratio: 25% catch, 65% drive — don\'t rush the return',
@@ -445,6 +478,7 @@ const EXERCISES = [
     category: 'compound',
     modality: 'cardio',
     equipment: ['jump_rope'],
+    environment: ['gym', 'home'],
     formCues: [
       'Land on balls of feet — not flat-footed',
       'Wrists do the turning — not the whole arm',
@@ -458,6 +492,7 @@ const EXERCISES = [
     category: 'compound',
     modality: 'cardio',
     equipment: ['assault_bike'],
+    environment: ['gym'],
     formCues: [
       'Push AND pull the handles — engage upper body fully',
       'Lean slightly forward — don\'t sit upright',
@@ -471,6 +506,7 @@ const EXERCISES = [
     category: 'compound',
     modality: 'cardio',
     equipment: ['elliptical'],
+    environment: ['gym'],
     formCues: [
       'Upright posture — don\'t slouch on handles',
       'Reverse direction to increase hamstring/glute emphasis',
@@ -486,6 +522,7 @@ const EXERCISES = [
     category: 'compound',
     modality: 'lift',
     equipment: ['barbell'],
+    environment: ['gym'],
     formCues: [
       'Bar over mid-foot — not touching shins at setup',
       'Hip hinge to grip — don\'t squat the deadlift',
@@ -499,6 +536,7 @@ const EXERCISES = [
     category: 'compound',
     modality: 'lift',
     equipment: ['trap_bar'],
+    environment: ['gym'],
     formCues: [
       'More quad-dominant than conventional — closer to squat pattern',
       'High handles reduce ROM — use for beginners or volume work',
@@ -512,6 +550,7 @@ const EXERCISES = [
     category: 'compound',
     modality: 'lift',
     equipment: ['barbell', 'squat_rack'],
+    environment: ['gym'],
     formCues: [
       'Bar rests on front delts and clavicle — not in your hands',
       'Elbows HIGH throughout — dropping elbows dumps the bar',
@@ -525,6 +564,7 @@ const EXERCISES = [
     category: 'compound',
     modality: 'lift',
     equipment: ['barbell'],
+    environment: ['gym'],
     formCues: [
       'First pull: slow and controlled from floor to knee',
       'Second pull: explosive triple extension — ankles, knees, hips',

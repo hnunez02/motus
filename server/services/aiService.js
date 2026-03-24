@@ -2,6 +2,9 @@
  * AI Service — Claude API prompt builder and caller
  */
 import Anthropic from '@anthropic-ai/sdk';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const MODEL = 'claude-sonnet-4-20250514';
@@ -169,9 +172,22 @@ function buildContextBlock(context) {
 export async function generateSession(context) {
   const systemWithContext = `${AI_SYSTEM_PROMPT}\n\n${buildContextBlock(context)}`;
 
-  const environmentContext = context.sessionRequest?.environment === 'home'
-    ? `\n\nCRITICAL CONSTRAINT — HOME TRAINING: The user is training at HOME with NO gym equipment. You MUST NOT include ANY of the following: barbell exercises, cable machines, smith machines, leg press machines, lat pulldown machines, or any other gym machine. ONLY use: dumbbells, resistance bands, pull-up bars, and bodyweight movements. Exercises like "Barbell Bench Press", "Cable Flyes", "Cable Lateral Raises", "Lat Pulldown" are FORBIDDEN. Use "Dumbbell Press", "Dumbbell Flyes", "Dumbbell Lateral Raises" instead.`
-    : `\n\nThe user is training at a GYM with full equipment access including barbells, cables, machines, and dumbbells. Feel free to program any equipment.`;
+  const environment = context.sessionRequest?.environment || 'gym';
+
+  const compatibleExercises = await prisma.exercise.findMany({
+    where: environment === 'home'
+      ? { environment: { hasSome: ['home'] } }
+      : {},
+    select: { name: true, muscleGroups: true, equipment: true },
+  });
+
+  const exerciseList = compatibleExercises
+    .map((e) => `- ${e.name} (muscles: ${e.muscleGroups.join(', ')})`)
+    .join('\n');
+
+  const environmentConstraint = environment === 'home'
+    ? `\n\nCRITICAL: You MUST use EXACT exercise names from this list only. Do not rename, paraphrase, or invent variations. Only these exercises exist for home training:\n${exerciseList}\n\nIf you cannot build the session from this list alone, use the closest available exercise from the list above.`
+    : `\n\nAvailable exercises:\n${exerciseList}`;
 
   const response = await client.messages.create({
     model: MODEL,
@@ -180,7 +196,7 @@ export async function generateSession(context) {
     messages: [
       {
         role: 'user',
-        content: `Generate a ${context.sessionRequest.modality} session for ${context.sessionRequest.split || 'full body'} targeting ${(context.sessionRequest.muscleGroups || []).join(', ')} with goal: ${context.sessionRequest.goal}.${environmentContext}`,
+        content: `Generate a ${context.sessionRequest.modality} session for ${context.sessionRequest.split || 'full body'} targeting ${(context.sessionRequest.muscleGroups || []).join(', ')} with goal: ${context.sessionRequest.goal}.${environmentConstraint}`,
       },
     ],
   });

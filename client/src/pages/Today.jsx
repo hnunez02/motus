@@ -54,7 +54,8 @@ const CARDIO_DURATIONS = ['20 min', '30 min', '45 min', '60 min'];
 
 // ── initial context ────────────────────────────────────────────────────
 const INIT_CTX = {
-  step:         'init',  // init | fatigue_override | modality | split | cardio_type | muscle_groups | goal | duration | generating | done
+  step:         'init',  // init | fatigue_override | environment | modality | split | cardio_type | muscle_groups | goal | duration | generating | done
+  environment:  null,    // 'gym' | 'home'
   modality:     null,
   split:        null,
   muscleGroups: [],
@@ -117,8 +118,8 @@ export default function Today() {
       ]);
       setCtx((c) => ({ ...c, step: 'fatigue_override' }));
     } else {
-      setMessages([atlasBubble('What do we work on today?')]);
-      setCtx((c) => ({ ...c, step: 'modality' }));
+      setMessages([atlasBubble('Where are you training today?')]);
+      setCtx((c) => ({ ...c, step: 'environment' }));
     }
   }, [fatigueData, ctx.step]);
 
@@ -157,6 +158,16 @@ export default function Today() {
       addMessage(userBubble(label));
       const forcedDeload = label === 'Show me the lighter session';
       setCtx((c) => ({ ...c, forcedDeload }));
+      await atlasReply('Where are you training today?');
+      setCtx((c) => ({ ...c, step: 'environment' }));
+    },
+    [addMessage, atlasReply]
+  );
+
+  const handleEnvironment = useCallback(
+    async (label, id) => {
+      addMessage(userBubble(label));
+      setCtx((c) => ({ ...c, environment: id }));
       await atlasReply('What do we work on today?');
       setCtx((c) => ({ ...c, step: 'modality' }));
     },
@@ -259,6 +270,7 @@ export default function Today() {
           goal:         c.goal || c.cardioType,
           cardioType:   c.cardioType,
           duration:     c.duration,
+          environment:  c.environment,
         });
 
         if (
@@ -305,6 +317,26 @@ export default function Today() {
             chips={['Show me the lighter session', "I feel good, let's go"]}
             onSelect={(label) => handleFatigueChoice(label)}
           />
+        );
+
+      case 'environment':
+        return (
+          <div className="flex flex-col gap-3 px-1 pt-1 pb-2">
+            {[
+              { id: 'gym',  label: '🏋️ Gym',  sub: 'Full equipment' },
+              { id: 'home', label: '🏠 Home', sub: 'Dumbbells, bands, bodyweight' },
+            ].map((opt) => (
+              <motion.button
+                key={opt.id}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => handleEnvironment(opt.label, opt.id)}
+                className="w-full px-4 py-4 rounded-card bg-surface-elevated border border-surface-elevated text-left transition-colors hover:border-brand"
+              >
+                <div className="text-base font-semibold text-text-primary">{opt.label}</div>
+                <div className="text-xs text-text-muted mt-0.5">{opt.sub}</div>
+              </motion.button>
+            ))}
+          </div>
         );
 
       case 'modality':
