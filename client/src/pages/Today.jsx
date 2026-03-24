@@ -54,15 +54,16 @@ const CARDIO_DURATIONS = ['20 min', '30 min', '45 min', '60 min'];
 
 // ── initial context ────────────────────────────────────────────────────
 const INIT_CTX = {
-  step:         'init',  // init | fatigue_override | environment | modality | split | cardio_type | muscle_groups | goal | duration | generating | done
-  environment:  null,    // 'gym' | 'home'
-  modality:     null,
-  split:        null,
-  muscleGroups: [],
-  goal:         null,
-  cardioType:   null,
-  duration:     null,
-  forcedDeload: false,
+  step:          'init',  // init | fatigue_override | environment | home_equipment | modality | split | cardio_type | muscle_groups | goal | duration | generating | done
+  environment:   null,    // 'gym' | 'home'
+  homeEquipment: [],
+  modality:      null,
+  split:         null,
+  muscleGroups:  [],
+  goal:          null,
+  cardioType:    null,
+  duration:      null,
+  forcedDeload:  false,
   generatedPlan: null,
 };
 
@@ -168,11 +169,25 @@ export default function Today() {
     async (label, id) => {
       addMessage(userBubble(label));
       setCtx((c) => ({ ...c, environment: id }));
-      await atlasReply('What do we work on today?');
-      setCtx((c) => ({ ...c, step: 'modality' }));
+      if (id === 'home') {
+        await atlasReply('What equipment do you have access to?');
+        setCtx((c) => ({ ...c, step: 'home_equipment' }));
+      } else {
+        await atlasReply('What do we work on today?');
+        setCtx((c) => ({ ...c, step: 'modality' }));
+      }
     },
     [addMessage, atlasReply]
   );
+
+  const handleHomeEquipment = useCallback(async (selectedEquipment) => {
+    const map = { dumbbells: 'Dumbbells', cables: 'Cables', mat: 'Mat / Bodyweight', pullup_bar: 'Pull-up Bar' };
+    const labels = selectedEquipment.map((e) => map[e] || e).join(', ');
+    addMessage(userBubble(labels));
+    setCtx((c) => ({ ...c, homeEquipment: selectedEquipment }));
+    await atlasReply('What do we work on today?');
+    setCtx((c) => ({ ...c, step: 'modality' }));
+  }, [addMessage, atlasReply]);
 
   const handleModality = useCallback(
     async (label, id) => {
@@ -264,13 +279,14 @@ export default function Today() {
       const c = ctxRef.current;
       try {
         const result = await generateSession.mutateAsync({
-          modality:     c.modality,
-          split:        c.split,
-          muscleGroups: c.muscleGroups,
-          goal:         c.goal || c.cardioType,
-          cardioType:   c.cardioType,
-          duration:     c.duration,
-          environment:  c.environment,
+          modality:      c.modality,
+          split:         c.split,
+          muscleGroups:  c.muscleGroups,
+          goal:          c.goal || c.cardioType,
+          cardioType:    c.cardioType,
+          duration:      c.duration,
+          environment:   c.environment,
+          homeEquipment: c.homeEquipment,
         });
 
         if (
@@ -338,6 +354,51 @@ export default function Today() {
             ))}
           </div>
         );
+
+      case 'home_equipment': {
+        const HOME_EQUIPMENT_OPTIONS = [
+          { id: 'dumbbells',  label: '🏋️ Dumbbells' },
+          { id: 'cables',     label: '🔗 Cables / Resistance Bands' },
+          { id: 'mat',        label: '🧘 Mat / Bodyweight Only' },
+          { id: 'pullup_bar', label: '🔝 Pull-up Bar' },
+        ];
+        return (
+          <div className="flex flex-col gap-3 px-1 pt-1 pb-2">
+            <p className="text-[11px] text-text-muted font-mono text-center">Select all that apply</p>
+            {HOME_EQUIPMENT_OPTIONS.map((opt) => {
+              const isSelected = ctx.homeEquipment.includes(opt.id);
+              return (
+                <motion.button
+                  key={opt.id}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => setCtx((c) => ({
+                    ...c,
+                    homeEquipment: isSelected
+                      ? c.homeEquipment.filter((e) => e !== opt.id)
+                      : [...c.homeEquipment, opt.id],
+                  }))}
+                  className={`w-full px-4 py-3.5 rounded-card border text-left transition-colors ${
+                    isSelected
+                      ? 'bg-brand text-white border-brand'
+                      : 'bg-surface-elevated text-text-primary border-surface-elevated'
+                  }`}
+                >
+                  <span className="text-sm font-semibold">{opt.label}</span>
+                </motion.button>
+              );
+            })}
+            <motion.button
+              animate={{ opacity: ctx.homeEquipment.length > 0 ? 1 : 0.35 }}
+              disabled={ctx.homeEquipment.length === 0}
+              whileTap={ctx.homeEquipment.length > 0 ? { scale: 0.97 } : undefined}
+              onClick={ctx.homeEquipment.length > 0 ? () => handleHomeEquipment(ctx.homeEquipment) : undefined}
+              className="w-full py-3.5 rounded-card bg-brand text-white font-semibold text-sm mt-1 disabled:cursor-not-allowed"
+            >
+              Continue →
+            </motion.button>
+          </div>
+        );
+      }
 
       case 'modality':
         return (
