@@ -242,6 +242,7 @@ export default function MuscleMap({ mode = 'display', muscleIntensity = {}, onMu
             <div style={{ maxHeight: 200, overflow: 'hidden' }}>
               <div className="body-map-wrapper" ref={frontRef}>
                 <Model
+                  key={`anterior-${Array.from(selectedSet).sort().join(',')}`}
                   type="anterior"
                   data={frontData}
                   highlightedColors={colors}
@@ -266,6 +267,7 @@ export default function MuscleMap({ mode = 'display', muscleIntensity = {}, onMu
             <div style={{ maxHeight: 200, overflow: 'hidden' }}>
               <div className="body-map-wrapper" ref={backRef}>
                 <Model
+                  key={`posterior-${Array.from(selectedSet).sort().join(',')}`}
                   type="posterior"
                   data={backData}
                   highlightedColors={colors}

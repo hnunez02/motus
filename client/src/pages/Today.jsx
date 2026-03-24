@@ -128,12 +128,22 @@ export default function Today() {
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    const timer = setTimeout(
-      () => el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' }),
-      60
-    );
+    const timer = setTimeout(() => {
+      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+    }, 120);
     return () => clearTimeout(timer);
   }, [messages, ctx.step]);
+
+  // ── scroll input zone into view after step transitions ───────────
+  useEffect(() => {
+    if (ctx.step === 'done') return;
+    const timer = setTimeout(() => {
+      const el = scrollRef.current;
+      if (!el) return;
+      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [ctx.step]);
 
   // ── helpers ───────────────────────────────────────────────────────
   const addMessage = useCallback((msg) => {
@@ -495,8 +505,8 @@ export default function Today() {
       {/* ── message feed ───────────────────────────────────────────── */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto px-4 pt-4 pb-2"
-        style={{ overscrollBehavior: 'contain' }}
+        className="flex-1 overflow-y-auto px-4 pt-4"
+        style={{ overscrollBehavior: 'contain', paddingBottom: 'calc(env(safe-area-inset-bottom) + 5rem)' }}
       >
         {messages.length === 0 && (
           <div className="flex items-center justify-center h-20">
@@ -592,7 +602,7 @@ function MuscleMapSelector({ selected, onMuscleSelect, onConfirm, prefersReduced
       />
 
       {/* Build my workout — sticky so it's always reachable */}
-      <div style={{ position: 'sticky', bottom: 0, background: '#111', paddingTop: 12, paddingBottom: 8, zIndex: 10 }}>
+      <div style={{ position: 'sticky', bottom: 0, background: '#111', paddingTop: 12, paddingBottom: 12, zIndex: 10 }}>
         <motion.button
           animate={{ opacity: selected.length > 0 ? 1 : 0.35 }}
           transition={{ duration: 0.2 }}

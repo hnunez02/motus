@@ -8,6 +8,7 @@ import WorkoutComplete from '../WorkoutComplete.jsx';
 import ExerciseMusclePreview from '../ExerciseMusclePreview.jsx';
 import { useMuscleIntensity } from '../MuscleMap.jsx';
 import { getMusclesForExercise } from '../../utils/exerciseMuscles.js';
+import YouTubeModal from '../YouTubeModal.jsx';
 
 // ── helpers ────────────────────────────────────────────────────────────
 function fmt(totalSeconds) {
@@ -31,6 +32,7 @@ export default function WorkoutCard({ session, onComplete }) {
   const [whyOpenIdx,     setWhyOpenIdx]     = useState(null);
   const [swapOpenIdx,    setSwapOpenIdx]    = useState(null);
   const [swapped,        setSwapped]        = useState({});    // exIdx → name
+  const [showVideo,      setShowVideo]      = useState(false);
   const [liveSecs,       setLiveSecs]       = useState(0);
   const [sessionStart]                      = useState(() => Date.now());
 
@@ -149,6 +151,11 @@ export default function WorkoutCard({ session, onComplete }) {
   // ── derived ────────────────────────────────────────────────────────
   const currentEx    = exercises[currentExIdx];
 
+  // Reset video modal when exercise changes
+  useEffect(() => {
+    setShowVideo(false);
+  }, [currentExIdx]);
+
   // Reset live inputs when exercise changes (must be after currentEx declaration)
   useEffect(() => {
     const defaultW = 135;
@@ -266,6 +273,17 @@ export default function WorkoutCard({ session, onComplete }) {
           <div className="bg-brand/10 border border-brand/20 rounded-card px-3 py-2.5 mb-5">
             <p className="text-xs text-brand leading-relaxed">💡 {currentEx.formCue}</p>
           </div>
+        )}
+
+        {currentEx?.videoUrl && (
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={() => setShowVideo(true)}
+            className="w-full flex items-center justify-center gap-2 py-2.5 mb-5 rounded-card border border-brand/40 text-brand text-sm font-medium bg-brand/5 active:bg-brand/15"
+          >
+            <span>▶</span>
+            <span>Watch Form Demo</span>
+          </motion.button>
         )}
 
         {/* Muscle preview — re-animates on each exercise change via key */}
@@ -421,6 +439,15 @@ export default function WorkoutCard({ session, onComplete }) {
         )}
       </div>
 
+      {/* YouTube form demo modal */}
+      {showVideo && (
+        <YouTubeModal
+          videoId={currentEx?.videoUrl}
+          exerciseName={effectiveName}
+          onClose={() => setShowVideo(false)}
+        />
+      )}
+
       {/* Swap exercise bottom sheet */}
       <AnimatePresence>
         {swapOpenIdx !== null && (
@@ -448,9 +475,15 @@ export default function WorkoutCard({ session, onComplete }) {
               </p>
 
               <div className="space-y-2">
-                {(exercises[swapOpenIdx]?.substituteWith || []).map((name, i) => (
+                {[
+                  exercises[swapOpenIdx]?.name,
+                  ...(exercises[swapOpenIdx]?.substituteWith || []),
+                ]
+                  .filter(Boolean)
+                  .filter((name) => name !== (swapped[swapOpenIdx] || exercises[swapOpenIdx]?.name))
+                  .map((name, i) => (
                   <motion.button
-                    key={i}
+                    key={name}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => {
                       setSwapped((prev) => ({ ...prev, [swapOpenIdx]: name }));

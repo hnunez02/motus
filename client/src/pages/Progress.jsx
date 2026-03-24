@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useLocation } from 'react-router-dom';
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -189,6 +190,7 @@ function ChartCard({ title, subtitle, children }) {
 // ── 1. Volume chart ────────────────────────────────────────────────────────
 
 function VolumeChart({ weeklyVolume }) {
+  const [whyOpen, setWhyOpen] = useState(false);
   const data = buildVolumeData(weeklyVolume);
   const hasData = data.some((d) => d.sets > 0);
 
@@ -244,6 +246,58 @@ function VolumeChart({ weeklyVolume }) {
           />
         </ComposedChart>
       </ResponsiveContainer>
+      {/* Why? accordion */}
+      <div style={{ marginTop: 12 }}>
+        <button
+          onClick={() => setWhyOpen(o => !o)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            background: 'rgba(242,166,35,0.1)',
+            border: '1px solid rgba(242,166,35,0.3)',
+            borderRadius: 20,
+            padding: '4px 12px',
+            fontSize: 11,
+            color: '#F2A623',
+            cursor: 'pointer',
+            fontFamily: 'monospace',
+            letterSpacing: '0.05em',
+          }}
+        >
+          <span>{whyOpen ? '▾' : '▸'}</span>
+          Why stay between the lines?
+        </button>
+
+        {whyOpen && (
+          <div style={{
+            marginTop: 8,
+            padding: '10px 12px',
+            background: 'rgba(255,255,255,0.04)',
+            borderRadius: 10,
+            borderLeft: '2px solid #F2A623',
+          }}>
+            <p style={{ fontSize: 12, color: '#ccc', lineHeight: 1.6, marginBottom: 8 }}>
+              <strong style={{ color: '#F2A623' }}>MEV (Minimum Effective Volume)</strong> is the
+              least amount of weekly sets needed to actually stimulate muscle growth. Training
+              below it means you're working out without a growth signal — maintenance at best.
+            </p>
+            <p style={{ fontSize: 12, color: '#ccc', lineHeight: 1.6, marginBottom: 8 }}>
+              <strong style={{ color: '#EF4444' }}>MRV (Maximum Recoverable Volume)</strong> is
+              the most sets you can do before recovery breaks down. Exceeding it leads to
+              accumulated fatigue, stalled progress, and higher injury risk — more isn't better
+              past this point.
+            </p>
+            <p style={{ fontSize: 12, color: '#ccc', lineHeight: 1.6 }}>
+              The sweet spot between MEV and MRV is your <strong style={{ color: '#E8593C' }}>MAV
+              (Maximum Adaptive Volume)</strong> — where growth is fastest and recovery is still
+              manageable. Atlas programs you in this window and adjusts week by week based on
+              your RPE feedback.
+            </p>
+          </div>
+        )}
+      </div>
+
       {!hasData && (
         <p className="text-xs text-text-muted text-center -mt-2">
           Log some sets to see your volume
@@ -495,11 +549,17 @@ function ConsistencyCard({ sets }) {
 // ── Progress page ──────────────────────────────────────────────────────────
 
 export default function Progress() {
-  const { data, isLoading } = useQuery({
+  const location = useLocation();
+
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ['progress'],
     queryFn: () => api.get('/api/progress/summary').then((r) => r.data),
-    staleTime: 60 * 1000,
+    staleTime: 0,
   });
+
+  useEffect(() => {
+    refetch();
+  }, [location.pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="min-h-screen bg-surface overflow-y-auto pb-24">

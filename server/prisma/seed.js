@@ -17,6 +17,7 @@ const EXERCISES = [
       'Bar path slightly diagonal — touch below chest, press toward face',
       'Squeeze the bar like you\'re trying to bend it apart',
     ],
+    videoUrl: 'SCVCLChPQZY',
   },
   {
     name: 'Incline Dumbbell Press',
@@ -31,6 +32,7 @@ const EXERCISES = [
       'Lower slowly with a 2-3 second eccentric for more stretch',
       'Keep wrists stacked over elbows throughout',
     ],
+    videoUrl: 'IP4oeKh-NGs',
   },
   {
     name: 'Overhead Press',
@@ -45,6 +47,7 @@ const EXERCISES = [
       'Squeeze glutes and brace core to protect lower back',
       'Full lockout at top — shrug slightly to engage traps',
     ],
+    videoUrl: 'F3QY5vMz_6I',
   },
   {
     name: 'Cable Fly',
@@ -115,6 +118,7 @@ const EXERCISES = [
       'Control the descent — 2-3 second eccentric',
       'Fully lock out at the top to recruit all tricep heads',
     ],
+    videoUrl: 'yU5GkGQFozE',
   },
   {
     name: 'Machine Chest Press',
@@ -159,6 +163,7 @@ const EXERCISES = [
       'Lead with your elbows, not your hands',
       'Squeeze shoulder blades together at peak contraction',
     ],
+    videoUrl: 'FWJR5Ve8bnQ',
   },
   {
     name: 'Weighted Pull-Up',
@@ -201,6 +206,7 @@ const EXERCISES = [
       'Full stretch at top — let lats elongate before next rep',
       'Wide grip increases lat stretch; close grip increases ROM',
     ],
+    videoUrl: 'CAwf7n6Luuc',
   },
   {
     name: 'Face Pull',
@@ -229,6 +235,7 @@ const EXERCISES = [
       'Full extension at the bottom — don\'t cut the stretch',
       'EZ-bar reduces wrist stress for high-frequency training',
     ],
+    videoUrl: '6ooQhOEIBGM',
   },
   {
     name: 'Hammer Curl',
@@ -301,6 +308,7 @@ const EXERCISES = [
       'Break parallel — hip crease below knee at minimum',
       'Drive through the whole foot — not just heels',
     ],
+    videoUrl: 'Uv_DKDl7EjA',
   },
   {
     name: 'Romanian Deadlift',
@@ -315,6 +323,7 @@ const EXERCISES = [
       'Feel a deep hamstring stretch — go until neutral spine breaks',
       'Drive hips through at the top — full glute contraction',
     ],
+    videoUrl: 'JCXUYuzwNrM',
   },
   {
     name: 'Leg Press',
@@ -343,6 +352,7 @@ const EXERCISES = [
       'Drive through heel of front foot to bias glutes',
       'Excellent unilateral stretch-position quad exercise',
     ],
+    videoUrl: 'ot_to1gCHGI',
   },
   {
     name: 'Leg Curl',
@@ -371,6 +381,7 @@ const EXERCISES = [
       'Squeeze glutes at full extension — hold 1-2 seconds',
       'Drive through the whole foot — not just heels',
     ],
+    videoUrl: 'SEdqd9BoBLs',
   },
   {
     name: 'Walking Lunges',
@@ -529,6 +540,7 @@ const EXERCISES = [
       'Lat activation — "protect your armpits" cue',
       'Push the floor away — don\'t think of it as pulling',
     ],
+    videoUrl: 'ytGaGIn3SjE',
   },
   {
     name: 'Trap Bar Deadlift',
@@ -587,6 +599,7 @@ const EXERCISES = [
       'Flare elbows 45 degrees — not tucked, not winged out',
       'Push the floor away explosively on the way up',
     ],
+    videoUrl: 'IODxDxX7oi4',
   },
   {
     name: 'Pike Push-Up',
@@ -629,6 +642,7 @@ const EXERCISES = [
       'Squeeze glutes hard at the top, don\'t hyperextend your lower back',
       'Hold 1-2 seconds at peak contraction for max glute activation',
     ],
+    videoUrl: 'wPM8icPu6H8',
   },
   {
     name: 'Single-Leg Glute Bridge',
@@ -836,8 +850,16 @@ async function main() {
   for (const exercise of EXERCISES) {
     await prisma.exercise.upsert({
       where: { name: exercise.name },
-      update: exercise,
       create: exercise,
+      update: {
+        muscleGroups: exercise.muscleGroups,
+        category: exercise.category,
+        modality: exercise.modality,
+        equipment: exercise.equipment,
+        environment: exercise.environment,
+        formCues: exercise.formCues,
+        videoUrl: exercise.videoUrl ?? null,
+      },
     });
   }
 

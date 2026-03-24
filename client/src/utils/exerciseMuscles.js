@@ -44,7 +44,11 @@ export const EXERCISE_MUSCLE_MAP = {
   'Hip Thrust':                 { primary: ['gluteal'],                              secondary: ['hamstring'] },
 
   // Shoulders (additional)
-  'Overhead Barbell Press':     { primary: ['front-deltoids'],                       secondary: ['triceps', 'trapezius'] },
+  'Overhead Barbell Press':          { primary: ['front-deltoids'], secondary: ['triceps', 'trapezius'] },
+  'Standing Barbell Overhead Press': { primary: ['front-deltoids'], secondary: ['triceps', 'trapezius'] },
+  'Standing Overhead Press':         { primary: ['front-deltoids'], secondary: ['triceps', 'trapezius'] },
+  'Barbell Overhead Press':          { primary: ['front-deltoids'], secondary: ['triceps', 'trapezius'] },
+  'Standing Barbell Press':          { primary: ['front-deltoids'], secondary: ['triceps', 'trapezius'] },
   'Military Press':             { primary: ['front-deltoids'],                       secondary: ['triceps', 'trapezius'] },
   'Seated Barbell Press':       { primary: ['front-deltoids'],                       secondary: ['triceps'] },
 
@@ -107,6 +111,25 @@ export const EXERCISE_MUSCLE_MAP = {
   'Hanging Leg Raise':          { primary: ['abs', 'adductor'],                      secondary: [] },
   'Ab Rollout':                 { primary: ['abs'],                                  secondary: ['lower-back'] },
   'Russian Twist':              { primary: ['obliques', 'abs'],                      secondary: [] },
+
+  // Bodyweight / mat exercises
+  'Push-Up':                    { primary: ['chest', 'front-deltoids'],              secondary: ['triceps', 'abs'] },
+  'Pike Push-Up':               { primary: ['front-deltoids', 'shoulders'],          secondary: ['triceps'] },
+  'Diamond Push-Up':            { primary: ['triceps', 'chest'],                     secondary: ['front-deltoids'] },
+  'Glute Bridge':               { primary: ['gluteal', 'hamstrings'],                secondary: ['lower-back'] },
+  'Single-Leg Glute Bridge':    { primary: ['gluteal', 'hamstrings'],                secondary: ['lower-back', 'abs'] },
+  'Bodyweight Squat':           { primary: ['quadriceps', 'gluteal'],                secondary: ['hamstrings', 'calves'] },
+  'Reverse Lunge':              { primary: ['quadriceps', 'gluteal'],                secondary: ['hamstrings'] },
+  'Dead Bug':                   { primary: ['abs'],                                  secondary: ['lower-back'] },
+  'Bird Dog':                   { primary: ['abs', 'lower-back'],                    secondary: ['gluteal'] },
+  'Superman Hold':              { primary: ['lower-back', 'gluteal'],                secondary: ['hamstrings'] },
+  'Mountain Climbers':          { primary: ['abs', 'front-deltoids'],                secondary: ['quadriceps'] },
+  'Hollow Body Hold':           { primary: ['abs'],                                  secondary: ['front-deltoids'] },
+  'Cossack Squat':              { primary: ['quadriceps', 'gluteal'],                secondary: ['hip-flexors', 'abs'] },
+  'Resistance Band Pull-Apart': { primary: ['rear-deltoids', 'shoulders'],           secondary: [] },
+  'Resistance Band Row':        { primary: ['upper-back', 'biceps'],                 secondary: ['rear-deltoids'] },
+  'Resistance Band Curl':       { primary: ['biceps'],                               secondary: ['front-deltoids'] },
+  'Resistance Band Lateral Walk': { primary: ['gluteal'],                            secondary: [] },
 };
 
 /**
@@ -120,10 +143,32 @@ export const EXERCISE_MUSCLE_MAP = {
 export function getMusclesForExercise(exerciseName) {
   if (!exerciseName) return { primary: [], secondary: [] };
   const needle = exerciseName.toLowerCase().trim();
-  const key = Object.keys(EXERCISE_MUSCLE_MAP).find(
+
+  // 1. Exact case-insensitive match
+  const exactKey = Object.keys(EXERCISE_MUSCLE_MAP).find(
     (k) => k.toLowerCase() === needle
   );
-  return key
-    ? EXERCISE_MUSCLE_MAP[key]
+  if (exactKey) return EXERCISE_MUSCLE_MAP[exactKey];
+
+  // 2. Normalized match — hyphens → spaces, collapse whitespace
+  const normalize = (s) => s.toLowerCase().replace(/-/g, ' ').replace(/\s+/g, ' ').trim();
+  const normalizedNeedle = normalize(exerciseName);
+  const normKey = Object.keys(EXERCISE_MUSCLE_MAP).find(
+    (k) => normalize(k) === normalizedNeedle
+  );
+  if (normKey) return EXERCISE_MUSCLE_MAP[normKey];
+
+  // 3. Partial match — needle contains a known key
+  const partialKey = Object.keys(EXERCISE_MUSCLE_MAP).find(
+    (k) => needle.includes(k.toLowerCase())
+  );
+  if (partialKey) return EXERCISE_MUSCLE_MAP[partialKey];
+
+  // 4. Reverse partial — a known key contains the needle
+  const reverseKey = Object.keys(EXERCISE_MUSCLE_MAP).find(
+    (k) => k.toLowerCase().includes(needle)
+  );
+  return reverseKey
+    ? EXERCISE_MUSCLE_MAP[reverseKey]
     : { primary: [], secondary: [] };
 }

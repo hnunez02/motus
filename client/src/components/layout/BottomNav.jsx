@@ -11,19 +11,19 @@ export default function BottomNav() {
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 bg-surface-card border-t border-surface-elevated flex"
-      style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
+      style={{ paddingBottom: 'max(0.25rem, env(safe-area-inset-bottom))' }}
     >
       {TABS.map((tab) => (
         <NavLink
           key={tab.to}
           to={tab.to}
           className={({ isActive }) =>
-            `flex-1 flex flex-col items-center py-3 text-xs transition-colors ${
+            `flex-1 flex flex-col items-center py-1.5 text-xs transition-colors ${
               isActive ? 'text-brand' : 'text-text-muted'
             }`
           }
         >
-          <span className="text-xl mb-1">{tab.icon}</span>
+          <span className="text-base mb-0.5">{tab.icon}</span>
           {tab.label}
         </NavLink>
       ))}

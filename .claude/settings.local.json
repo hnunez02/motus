@@ -20,7 +20,19 @@
       "Bash(npm install react-body-highlighter 2>&1)",
       "Bash(pwd && npm install react-body-highlighter --prefix /Users/hectornunez/Motus/client 2>&1)",
       "Bash(cat /Users/hectornunez/Motus/client/node_modules/react-body-highlighter/package.json | python3 -c \"import sys,json; p=json.load\\(sys.stdin\\); print\\(p.get\\('main',''\\), p.get\\('module',''\\), p.get\\('exports',''\\)\\)\")",
-      "Bash(cd /Users/hectornunez/Motus/server && npx prisma db push 2>&1)"
+      "Bash(cd /Users/hectornunez/Motus/server && npx prisma db push 2>&1)",
+      "Bash(cd /Users/hectornunez/Motus/client && npm run build 2>&1)",
+      "Bash(npm run build 2>&1 && npx cap sync ios 2>&1)",
+      "Bash(cd /Users/hectornunez/Motus && git pull 2>&1)",
+      "Bash(git restore client/src/components/ExerciseMusclePreview.jsx client/src/components/chat/WorkoutCard.jsx client/src/components/chat/SetLogger.jsx 2>&1)",
+      "Bash(cd /Users/hectornunez/Motus/client && npm run build 2>&1 && npx cap sync ios 2>&1)",
+      "Bash(npm run db:seed 2>&1)",
+      "Bash(cd /Users/hectornunez/Motus && git add server/services/aiService.js server/prisma/schema.prisma server/prisma/seed.js client/src/pages/Today.jsx server/routes/ai.js && git status)",
+      "Bash(git commit -m \"$\\(cat <<'EOF'\nAdd environment-aware workout generation \\(gym vs home\\)\n\n- Add environment step to Today.jsx flow before modality selection\n- Filter exercises by environment field via DB query in aiService\n- Add environment[] field to Exercise schema; tag all 40 seed exercises\n- Enforce exact exercise name matching for home sessions to prevent hallucination\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push origin main 2>&1)",
+      "Bash(cd /Users/hectornunez/Motus/server && npm run db:seed 2>&1)",
+      "Bash(cd /Users/hectornunez/Motus && git add client/src/pages/Today.jsx server/prisma/seed.js && git commit -m \"$\\(cat <<'EOF'\nAdd home equipment sub-selection and mat/bodyweight exercise library\n\n- Add home_equipment multi-select step after choosing Home environment\n- Home flow: environment → home_equipment → modality \\(gym skips straight to modality\\)\n- Pass homeEquipment to generateSession for server-side filtering\n- Add 18 mat/bodyweight/band exercises to seed \\(58 total, was 40\\)\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n\\)\" && git push origin main 2>&1)",
+      "Bash(git add server/routes/ai.js server/services/aiService.js && git commit -m \"$\\(cat <<'EOF'\nFilter exercise list by home equipment selection\n\n- Destructure homeEquipment from req.body in generate-session route\n- Pass homeEquipment through sessionRequest context to aiService\n- Build equipment-aware Prisma filter: bodyweight always included,\n  dumbbells/bands/pull_up_bar added per user selection\n- Gym sessions still receive the full unfiltered exercise list\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n\\)\" && git push origin main 2>&1)"
     ]
   }
 }

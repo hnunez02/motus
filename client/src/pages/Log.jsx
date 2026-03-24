@@ -114,11 +114,13 @@ export default function Log() {
   const workouts = groupByDay(data?.sets || []);
 
   return (
-    <div style={{ padding: '16px 16px 80px' }}>
-      <h1 style={{ fontSize: 28, fontWeight: 700, color: '#F5F5F5', marginBottom: 16 }}>
-        Workout Log
-      </h1>
-      <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', marginTop: 2, marginBottom: 20 }}>Last 60 days</p>
+    <div style={{ padding: '0 16px 80px' }}>
+      <div style={{ paddingTop: 'max(3.5rem, env(safe-area-inset-top))', paddingBottom: 4 }}>
+        <h1 style={{ fontSize: 28, fontWeight: 700, color: '#F5F5F5', marginBottom: 4 }}>
+          Workout Log
+        </h1>
+        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', marginBottom: 20 }}>Last 60 days</p>
+      </div>
 
       {isLoading && (
         <p style={{ color: '#888', fontSize: 14, textAlign: 'center', marginTop: 40 }}>
