@@ -219,16 +219,17 @@ export async function generateSession(context) {
   const result = extractJSON(raw);
 
   // Enrich exercises with videoUrl from DB
-  result.exercises = await Promise.all(
-    result.exercises.map(async (ex) => {
-      const dbExercise = await prisma.exercise.findFirst({
-        where: { name: { equals: ex.name, mode: 'insensitive' } },
-        select: { id: true, videoUrl: true },
-      });
-      console.log(`videoUrl for "${ex.name}":`, dbExercise?.videoUrl);
-      return { ...ex, videoUrl: dbExercise?.videoUrl ?? null };
-    })
-  );
+  if (result?.exercises?.length) {
+    result.exercises = await Promise.all(
+      result.exercises.map(async (ex) => {
+        const dbEx = await prisma.exercise.findFirst({
+          where: { name: { equals: ex.name, mode: 'insensitive' } },
+          select: { videoUrl: true },
+        });
+        return { ...ex, videoUrl: dbEx?.videoUrl ?? null };
+      })
+    );
+  }
 
   return result;
 }
