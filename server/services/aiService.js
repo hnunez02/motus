@@ -162,7 +162,35 @@ WHAT YOU NEVER DO:
  * Build the context string injected into the system prompt.
  */
 function buildContextBlock(context) {
-  return `ATHLETE CONTEXT:\n${JSON.stringify(context, null, 2)}`;
+  const user = context.user ?? context;
+
+  const biometricLines = [
+    user.biologicalSex && user.biologicalSex !== 'prefer_not_to_say'
+      ? `Biological sex: ${user.biologicalSex}. ${
+          user.biologicalSex === 'female'
+            ? 'Women typically recover faster — can handle higher frequency and respond well to higher rep ranges.'
+            : 'Standard male programming defaults apply.'
+        }`
+      : null,
+    user.weightKg
+      ? `Body weight: ${Math.round(user.weightKg * 2.205)} lbs (${user.weightKg.toFixed(1)} kg). Use for bodyweight exercise scaling and caloric context.`
+      : null,
+    user.activityLevel
+      ? `Daily activity level outside gym: ${user.activityLevel}. ${
+          user.activityLevel === 'very_active'
+            ? 'High baseline fatigue — reduce session volume 10-15% vs sedentary baseline.'
+            : user.activityLevel === 'sedentary'
+            ? 'Low daily activity — can handle full programmed volume.'
+            : 'Moderate daily activity — standard volume recommendations apply.'
+        }`
+      : null,
+  ].filter(Boolean);
+
+  const biometricContext = biometricLines.length
+    ? `\n\nBIOMETRIC CONTEXT:\n${biometricLines.join('\n')}`
+    : '';
+
+  return `ATHLETE CONTEXT:\n${JSON.stringify(context, null, 2)}${biometricContext}`;
 }
 
 /**

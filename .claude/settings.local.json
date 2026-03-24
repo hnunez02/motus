@@ -33,7 +33,11 @@
       "Bash(cd /Users/hectornunez/Motus/server && npm run db:seed 2>&1)",
       "Bash(cd /Users/hectornunez/Motus && git add client/src/pages/Today.jsx server/prisma/seed.js && git commit -m \"$\\(cat <<'EOF'\nAdd home equipment sub-selection and mat/bodyweight exercise library\n\n- Add home_equipment multi-select step after choosing Home environment\n- Home flow: environment → home_equipment → modality \\(gym skips straight to modality\\)\n- Pass homeEquipment to generateSession for server-side filtering\n- Add 18 mat/bodyweight/band exercises to seed \\(58 total, was 40\\)\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n\\)\" && git push origin main 2>&1)",
       "Bash(git add server/routes/ai.js server/services/aiService.js && git commit -m \"$\\(cat <<'EOF'\nFilter exercise list by home equipment selection\n\n- Destructure homeEquipment from req.body in generate-session route\n- Pass homeEquipment through sessionRequest context to aiService\n- Build equipment-aware Prisma filter: bodyweight always included,\n  dumbbells/bands/pull_up_bar added per user selection\n- Gym sessions still receive the full unfiltered exercise list\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n\\)\" && git push origin main 2>&1)",
-      "Bash(git add -A && git commit -m \"Fix: enrich exercises with videoUrl after AI generation\" && git push origin main)"
+      "Bash(git add -A && git commit -m \"Fix: enrich exercises with videoUrl after AI generation\" && git push origin main)",
+      "Bash(cd /Users/hectornunez/Motus/server && npx prisma migrate dev --name add_biometric_profile 2>&1)",
+      "Bash(cd /Users/hectornunez/Motus/server && npx prisma migrate dev --name add_biometric_profile --create-only 2>&1)",
+      "Bash(cd /Users/hectornunez/Motus/server && PRISMA_MIGRATE_SKIP_GENERATE=1 npx prisma db push 2>&1)",
+      "Bash(cd /Users/hectornunez/Motus && git add -A && git commit -m \"$\\(cat <<'EOF'\nExpanded onboarding: biometrics + HealthKit\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
   }
 }

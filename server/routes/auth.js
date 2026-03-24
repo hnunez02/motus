@@ -32,16 +32,24 @@ router.post('/sync', requireAuth, async (req, res, next) => {
 // PATCH /api/auth/profile — update user profile (goals, equipment, etc.)
 router.patch('/profile', requireAuth, async (req, res, next) => {
   try {
-    const { trainingAge, goals, equipment, injuryFlags, daysPerWeek } = req.body;
+    const {
+      trainingAge, goals, equipment, injuryFlags, daysPerWeek,
+      biologicalSex, heightCm, weightKg, activityLevel, healthKitConnected,
+    } = req.body;
 
     const user = await prisma.user.update({
       where: { id: req.user.id },
       data: {
-        ...(trainingAge !== undefined && { trainingAge }),
-        ...(goals !== undefined && { goals }),
-        ...(equipment !== undefined && { equipment }),
-        ...(injuryFlags !== undefined && { injuryFlags }),
-        ...(daysPerWeek !== undefined && { daysPerWeek }),
+        ...(trainingAge          !== undefined && { trainingAge }),
+        ...(goals                !== undefined && { goals }),
+        ...(equipment            !== undefined && { equipment }),
+        ...(injuryFlags          !== undefined && { injuryFlags }),
+        ...(daysPerWeek          !== undefined && { daysPerWeek }),
+        ...(biologicalSex        !== undefined && { biologicalSex }),
+        ...(heightCm             !== undefined && { heightCm }),
+        ...(weightKg             !== undefined && { weightKg }),
+        ...(activityLevel        !== undefined && { activityLevel }),
+        ...(healthKitConnected   !== undefined && { healthKitConnected }),
       },
     });
 

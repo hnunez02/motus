@@ -7,26 +7,15 @@ import AtlasAvatar from '../components/ui/AtlasAvatar.jsx';
 // ── step data ──────────────────────────────────────────────────────────────
 
 const STEPS = [
-  {
-    title: "Let's get to know you",
-    subtitle: 'How long have you been lifting consistently?',
-  },
-  {
-    title: "What's your main goal?",
-    subtitle: 'Pick all that apply.',
-  },
-  {
-    title: 'What equipment do you have?',
-    subtitle: 'Select everything available to you.',
-  },
-  {
-    title: 'Any injury history?',
-    subtitle: "We'll route around these in your programming.",
-  },
-  {
-    title: 'How many days can you train?',
-    subtitle: 'Per week, on average.',
-  },
+  { title: "Let's get to know you",       subtitle: 'How long have you been lifting consistently?' },
+  { title: "What's your main goal?",      subtitle: 'Pick all that apply.' },
+  { title: 'About you',                   subtitle: 'This helps Atlas personalize your programming.' },
+  { title: 'Your body stats',             subtitle: "We'll use this to scale your workouts. You can update this anytime." },
+  { title: 'How active are you?',         subtitle: 'Outside of your workouts, on a typical day.' },
+  { title: 'What equipment do you have?', subtitle: 'Select everything available to you.' },
+  { title: 'Any injury history?',         subtitle: "We'll route around these in your programming." },
+  { title: 'How many days can you train?', subtitle: 'Per week, on average.' },
+  { title: 'Connect Apple Health',        subtitle: 'Optional — Atlas reads your activity, sleep, and heart rate to adapt your training.' },
 ];
 
 const TOTAL_STEPS = STEPS.length;
@@ -47,15 +36,28 @@ const GOAL_OPTIONS = [
   { label: 'Athletic performance', value: 'athletic'    },
 ];
 
+const BIOLOGICAL_SEX_OPTIONS = [
+  { label: 'Male',              value: 'male'              },
+  { label: 'Female',            value: 'female'            },
+  { label: 'Prefer not to say', value: 'prefer_not_to_say' },
+];
+
+const ACTIVITY_LEVEL_OPTIONS = [
+  { label: '🪑 Sedentary',      subtitle: 'Desk job, mostly sitting',             value: 'sedentary'   },
+  { label: '🚶 Lightly Active', subtitle: 'Light walking, some movement',          value: 'light'       },
+  { label: '🏃 Active',         subtitle: 'On your feet most of the day',          value: 'active'      },
+  { label: '⚡ Very Active',    subtitle: 'Physical job or training twice a day',  value: 'very_active' },
+];
+
 const EQUIPMENT_OPTIONS = [
-  { label: 'Barbell + Plates', value: 'barbell'      },
-  { label: 'Dumbbells',        value: 'dumbbells'    },
-  { label: 'Cable Machine',    value: 'cable'        },
-  { label: 'Smith Machine',    value: 'smith_machine'},
-  { label: 'Resistance Bands', value: 'bands'        },
-  { label: 'Pull-Up Bar',      value: 'pullup_bar'   },
-  { label: 'Full Gym Access',  value: 'full_gym'     },
-  { label: 'Home Gym Only',    value: 'home_gym'     },
+  { label: 'Barbell + Plates', value: 'barbell'       },
+  { label: 'Dumbbells',        value: 'dumbbells'     },
+  { label: 'Cable Machine',    value: 'cable'         },
+  { label: 'Smith Machine',    value: 'smith_machine' },
+  { label: 'Resistance Bands', value: 'bands'         },
+  { label: 'Pull-Up Bar',      value: 'pullup_bar'    },
+  { label: 'Full Gym Access',  value: 'full_gym'      },
+  { label: 'Home Gym Only',    value: 'home_gym'      },
 ];
 
 const INJURY_OPTIONS = [
@@ -144,18 +146,23 @@ function SingleChips({ options, selected, onSelect }) {
 export default function Onboarding() {
   const navigate = useNavigate();
 
-  const [step,      setStep]      = useState(1);
-  const [direction, setDirection] = useState(1);
+  const [step,       setStep]      = useState(1);
+  const [direction,  setDirection] = useState(1);
   const [submitting, setSubmitting] = useState(false);
-  const [error,     setError]     = useState(null);
+  const [error,      setError]     = useState(null);
 
   const [profile, setProfile] = useState({
-    trainingAge:  null,   // number
-    goals:        [],     // string[]
-    equipment:    [],     // string[]
-    injuryFlags:  [],     // string[]
-    injuryNote:   '',     // string (optional free text)
-    daysPerWeek:  null,   // number
+    trainingAge:        null,   // number
+    goals:              [],     // string[]
+    biologicalSex:      null,   // string
+    heightCm:           null,   // number
+    weightKg:           null,   // number
+    activityLevel:      null,   // string
+    equipment:          [],     // string[]
+    injuryFlags:        [],     // string[]
+    injuryNote:         '',     // string
+    daysPerWeek:        null,   // number
+    healthKitConnected: false,  // boolean
   });
 
   // ── navigation ───────────────────────────────────────────────────────────
@@ -199,7 +206,7 @@ export default function Onboarding() {
           ...(prev.injuryFlags.includes(value)
             ? prev.injuryFlags.filter((v) => v !== value && v !== 'none')
             : [...prev.injuryFlags.filter((v) => v !== 'none'), value]),
-        ].filter((v, i, arr) => arr.indexOf(v) === i), // dedupe
+        ].filter((v, i, arr) => arr.indexOf(v) === i),
       }));
     }
   };
@@ -210,9 +217,13 @@ export default function Onboarding() {
     switch (step) {
       case 1: return profile.trainingAge !== null;
       case 2: return profile.goals.length > 0;
-      case 3: return profile.equipment.length > 0;
-      case 4: return true;                          // injuries are optional
-      case 5: return profile.daysPerWeek !== null;
+      case 3: return profile.biologicalSex !== null;
+      case 4: return profile.heightCm !== null && profile.weightKg !== null;
+      case 5: return profile.activityLevel !== null;
+      case 6: return profile.equipment.length > 0;
+      case 7: return true;                          // injuries optional
+      case 8: return profile.daysPerWeek !== null;
+      case 9: return true;                          // HealthKit always skippable
       default: return false;
     }
   })();
@@ -228,16 +239,19 @@ export default function Onboarding() {
         ...(profile.injuryNote.trim() ? [profile.injuryNote.trim()] : []),
       ];
 
-      // 1. Save profile
       await api.patch('/api/auth/profile', {
-        trainingAge:  profile.trainingAge,
-        goals:        profile.goals,
-        equipment:    profile.equipment,
+        trainingAge:        profile.trainingAge,
+        goals:              profile.goals,
+        equipment:          profile.equipment,
         injuryFlags,
-        daysPerWeek:  profile.daysPerWeek,
+        daysPerWeek:        profile.daysPerWeek,
+        biologicalSex:      profile.biologicalSex,
+        heightCm:           profile.heightCm,
+        weightKg:           profile.weightKg,
+        activityLevel:      profile.activityLevel,
+        healthKitConnected: profile.healthKitConnected,
       });
 
-      // 2. Create first mesocycle (primary goal drives the block)
       await api.post('/api/program/mesocycle', {
         goal:        profile.goals[0] ?? 'hypertrophy',
         weeksTotal:  6,
@@ -276,6 +290,114 @@ export default function Onboarding() {
 
       case 3:
         return (
+          <SingleChips
+            options={BIOLOGICAL_SEX_OPTIONS}
+            selected={profile.biologicalSex}
+            onSelect={(v) => setProfile((p) => ({ ...p, biologicalSex: v }))}
+          />
+        );
+
+      case 4: {
+        const cmToFtIn = (cm) => {
+          if (!cm) return { ft: '', inches: '' };
+          const totalIn = cm / 2.54;
+          return { ft: Math.floor(totalIn / 12), inches: Math.round(totalIn % 12) };
+        };
+        const kgToLbs = (kg) => kg ? Math.round(kg * 2.205) : '';
+        const ftInToCm = (ft, inches) => ((parseInt(ft) || 0) * 12 + (parseInt(inches) || 0)) * 2.54;
+        const lbsToKg = (lbs) => (parseFloat(lbs) || 0) / 2.205;
+
+        const { ft, inches } = cmToFtIn(profile.heightCm);
+        const lbs = kgToLbs(profile.weightKg);
+
+        return (
+          <div className="space-y-6">
+            {/* Height */}
+            <div>
+              <p className="text-sm text-text-muted mb-3">Height</p>
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 bg-surface-elevated rounded-card px-4 py-3 border border-surface-elevated focus-within:border-brand">
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      placeholder="5"
+                      value={ft}
+                      onChange={(e) => {
+                        const newCm = ftInToCm(e.target.value, inches);
+                        setProfile((p) => ({ ...p, heightCm: newCm > 0 ? newCm : null }));
+                      }}
+                      className="flex-1 bg-transparent text-text-primary text-lg font-semibold w-12 focus:outline-none"
+                    />
+                    <span className="text-text-muted text-sm">ft</span>
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 bg-surface-elevated rounded-card px-4 py-3 border border-surface-elevated focus-within:border-brand">
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      placeholder="10"
+                      value={inches}
+                      onChange={(e) => {
+                        const newCm = ftInToCm(ft, e.target.value);
+                        setProfile((p) => ({ ...p, heightCm: newCm > 0 ? newCm : null }));
+                      }}
+                      className="flex-1 bg-transparent text-text-primary text-lg font-semibold w-12 focus:outline-none"
+                    />
+                    <span className="text-text-muted text-sm">in</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Weight */}
+            <div>
+              <p className="text-sm text-text-muted mb-3">Weight</p>
+              <div className="flex items-center gap-2 bg-surface-elevated rounded-card px-4 py-3 border border-surface-elevated focus-within:border-brand">
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  placeholder="165"
+                  value={lbs}
+                  onChange={(e) => {
+                    const kg = lbsToKg(e.target.value);
+                    setProfile((p) => ({ ...p, weightKg: kg > 0 ? kg : null }));
+                  }}
+                  className="flex-1 bg-transparent text-text-primary text-lg font-semibold focus:outline-none"
+                />
+                <span className="text-text-muted text-sm">lbs</span>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      case 5:
+        return (
+          <div className="flex flex-col gap-3">
+            {ACTIVITY_LEVEL_OPTIONS.map((opt) => (
+              <motion.button
+                key={opt.value}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setProfile((p) => ({ ...p, activityLevel: opt.value }))}
+                className={`w-full px-4 py-3.5 rounded-card border text-left transition-colors ${
+                  profile.activityLevel === opt.value
+                    ? 'bg-brand text-white border-brand'
+                    : 'bg-surface-elevated text-text-primary border-surface-elevated'
+                }`}
+              >
+                <div className="text-sm font-semibold">{opt.label}</div>
+                <div className={`text-xs mt-0.5 ${profile.activityLevel === opt.value ? 'text-white/70' : 'text-text-muted'}`}>
+                  {opt.subtitle}
+                </div>
+              </motion.button>
+            ))}
+          </div>
+        );
+
+      case 6:
+        return (
           <MultiChips
             options={EQUIPMENT_OPTIONS}
             selected={profile.equipment}
@@ -283,7 +405,7 @@ export default function Onboarding() {
           />
         );
 
-      case 4:
+      case 7:
         return (
           <div className="space-y-4">
             <MultiChips
@@ -303,13 +425,52 @@ export default function Onboarding() {
           </div>
         );
 
-      case 5:
+      case 8:
         return (
           <SingleChips
             options={DAYS_OPTIONS}
             selected={profile.daysPerWeek}
             onSelect={(v) => setProfile((p) => ({ ...p, daysPerWeek: v }))}
           />
+        );
+
+      case 9:
+        return (
+          <div className="space-y-4">
+            <div className="bg-surface-elevated rounded-card p-4 space-y-3">
+              {[
+                { icon: '❤️', label: 'Resting heart rate',    desc: 'Detects recovery status'         },
+                { icon: '📊', label: 'Heart rate variability', desc: 'Gold standard for readiness'      },
+                { icon: '😴', label: 'Sleep duration',         desc: 'Adjusts session intensity'        },
+                { icon: '🏃', label: 'Active energy & steps',  desc: 'Tracks daily activity load'       },
+                { icon: '⚖️', label: 'Body weight',            desc: 'Scales progressive overload'      },
+              ].map(({ icon, label, desc }) => (
+                <div key={label} className="flex items-center gap-3">
+                  <span className="text-xl w-7 flex-shrink-0">{icon}</span>
+                  <div>
+                    <p className="text-sm font-medium text-text-primary">{label}</p>
+                    <p className="text-xs text-text-muted">{desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <p className="text-xs text-text-muted text-center px-2">
+              Read-only · Never shared · You can disconnect anytime in Settings
+            </p>
+
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setProfile((p) => ({ ...p, healthKitConnected: true }))}
+              className={`w-full py-4 rounded-card font-semibold text-base transition-colors ${
+                profile.healthKitConnected
+                  ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                  : 'bg-brand text-white'
+              }`}
+            >
+              {profile.healthKitConnected ? '✓ Apple Health Connected' : 'Connect Apple Health'}
+            </motion.button>
+          </div>
         );
 
       default:
@@ -390,7 +551,7 @@ export default function Onboarding() {
           {submitting
             ? 'Building your program…'
             : step === TOTAL_STEPS
-              ? "Let's go 🦉"
+              ? (profile.healthKitConnected ? "Let's go 🐾" : 'Skip & Continue →')
               : 'Continue →'}
         </motion.button>
       </div>

@@ -17,8 +17,14 @@ model User {
   goals         Json     @default("[]")
   equipment     Json     @default("[]")
   injuryFlags   Json     @default("[]")
-  daysPerWeek   Int      @default(4)
-  createdAt     DateTime @default(now())
+  daysPerWeek         Int      @default(4)
+  // ── Biometric profile ──
+  biologicalSex       String?  // 'male' | 'female' | 'prefer_not_to_say'
+  heightCm            Float?   // stored in cm, displayed in ft/in on device
+  weightKg            Float?   // stored in kg, displayed in lbs on device
+  activityLevel       String?  // 'sedentary' | 'light' | 'active' | 'very_active'
+  healthKitConnected  Boolean  @default(false)
+  createdAt           DateTime @default(now())
 
   perfProfile   PerfProfile?
   mesocycles    Mesocycle[]
