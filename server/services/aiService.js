@@ -173,11 +173,25 @@ export async function generateSession(context) {
   const systemWithContext = `${AI_SYSTEM_PROMPT}\n\n${buildContextBlock(context)}`;
 
   const environment = context.sessionRequest?.environment || 'gym';
+  const homeEquipment = context.sessionRequest?.homeEquipment || [];
+
+  let equipmentFilter = {};
+  if (environment === 'home') {
+    const allowedEquipment = ['bodyweight'];
+    if (homeEquipment.includes('dumbbells'))  allowedEquipment.push('dumbbells');
+    if (homeEquipment.includes('cables'))     allowedEquipment.push('bands');
+    if (homeEquipment.includes('pullup_bar')) allowedEquipment.push('pull_up_bar');
+
+    equipmentFilter = {
+      AND: [
+        { environment: { hasSome: ['home'] } },
+        { equipment: { hasSome: allowedEquipment } },
+      ],
+    };
+  }
 
   const compatibleExercises = await prisma.exercise.findMany({
-    where: environment === 'home'
-      ? { environment: { hasSome: ['home'] } }
-      : {},
+    where: environment === 'home' ? equipmentFilter : {},
     select: { name: true, muscleGroups: true, equipment: true },
   });
 
