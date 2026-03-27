@@ -86,14 +86,15 @@ router.post('/session', requireAuth, async (req, res, next) => {
 // GET /api/log/history — get recent logged sets
 router.get('/history', requireAuth, async (req, res, next) => {
   try {
-    const { days = 14, limit = 100 } = req.query;
+    const days  = Math.min(Math.max(parseInt(req.query.days)  || 14,  1),  90);
+    const limit = Math.min(Math.max(parseInt(req.query.limit) || 100, 1), 500);
     const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
     const sets = await prisma.loggedSet.findMany({
       where: { userId: req.user.id, loggedAt: { gte: since } },
       include: { plannedSet: { include: { exercise: true } } },
       orderBy: { loggedAt: 'desc' },
-      take: parseInt(limit),
+      take: limit,
     });
 
     res.json({ sets });
