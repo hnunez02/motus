@@ -37,7 +37,10 @@
       "Bash(cd /Users/hectornunez/Motus/server && npx prisma migrate dev --name add_biometric_profile 2>&1)",
       "Bash(cd /Users/hectornunez/Motus/server && npx prisma migrate dev --name add_biometric_profile --create-only 2>&1)",
       "Bash(cd /Users/hectornunez/Motus/server && PRISMA_MIGRATE_SKIP_GENERATE=1 npx prisma db push 2>&1)",
-      "Bash(cd /Users/hectornunez/Motus && git add -A && git commit -m \"$\\(cat <<'EOF'\nExpanded onboarding: biometrics + HealthKit\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n\\)\")"
+      "Bash(cd /Users/hectornunez/Motus && git add -A && git commit -m \"$\\(cat <<'EOF'\nExpanded onboarding: biometrics + HealthKit\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(npx cap sync ios 2>&1)",
+      "Bash(cd /Users/hectornunez/Motus && git add server/index.js server/routes/auth.js server/routes/log.js && git commit -m \"$\\(cat <<'EOF'\nSecurity: input validation, CORS fix, dev route guard\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n\\)\" && git push origin main 2>&1)",
+      "Bash(cd /Users/hectornunez/Motus && git add -A && git commit -m \"$\\(cat <<'EOF'\nAdd settings sheet with re-run onboarding\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n\\)\" && git push origin main 2>&1)"
     ]
   }
 }

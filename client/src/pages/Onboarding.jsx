@@ -301,7 +301,12 @@ export default function Onboarding() {
         const cmToFtIn = (cm) => {
           if (!cm) return { ft: '', inches: '' };
           const totalIn = cm / 2.54;
-          return { ft: Math.floor(totalIn / 12), inches: Math.round(totalIn % 12) };
+          const ftVal = Math.floor(totalIn / 12);
+          const inVal = Math.round(totalIn % 12);
+          return {
+            ft:     ftVal > 0 ? String(ftVal) : '',
+            inches: inVal > 0 ? String(inVal) : '',
+          };
         };
         const kgToLbs = (kg) => kg ? Math.round(kg * 2.205) : '';
         const ftInToCm = (ft, inches) => ((parseInt(ft) || 0) * 12 + (parseInt(inches) || 0)) * 2.54;
@@ -322,7 +327,8 @@ export default function Onboarding() {
                       type="number"
                       inputMode="numeric"
                       placeholder="5"
-                      value={ft}
+                      value={ft ?? ''}
+                      onFocus={(e) => e.target.select()}
                       onChange={(e) => {
                         const newCm = ftInToCm(e.target.value, inches);
                         setProfile((p) => ({ ...p, heightCm: newCm > 0 ? newCm : null }));
@@ -338,7 +344,8 @@ export default function Onboarding() {
                       type="number"
                       inputMode="numeric"
                       placeholder="10"
-                      value={inches}
+                      value={inches ?? ''}
+                      onFocus={(e) => e.target.select()}
                       onChange={(e) => {
                         const newCm = ftInToCm(ft, e.target.value);
                         setProfile((p) => ({ ...p, heightCm: newCm > 0 ? newCm : null }));
@@ -359,7 +366,8 @@ export default function Onboarding() {
                   type="number"
                   inputMode="decimal"
                   placeholder="165"
-                  value={lbs}
+                  value={lbs ?? ''}
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => {
                     const kg = lbsToKg(e.target.value);
                     setProfile((p) => ({ ...p, weightKg: kg > 0 ? kg : null }));

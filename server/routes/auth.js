@@ -50,18 +50,19 @@ router.patch('/profile', requireAuth, async (req, res, next) => {
     if (activityLevel !== undefined && !['sedentary', 'light', 'active', 'very_active'].includes(activityLevel)) {
       return res.status(400).json({ error: 'Invalid activityLevel value' });
     }
-    if (daysPerWeek !== undefined && (typeof daysPerWeek !== 'number' || daysPerWeek < 1 || daysPerWeek > 7)) {
+    if (daysPerWeek !== undefined && daysPerWeek !== null && (typeof daysPerWeek !== 'number' || daysPerWeek < 1 || daysPerWeek > 7)) {
       return res.status(400).json({ error: 'Invalid daysPerWeek value' });
     }
 
     const user = await prisma.user.update({
       where: { id: req.user.id },
       data: {
-        ...(trainingAge          !== undefined && { trainingAge }),
+        // Use hasOwnProperty for trainingAge + daysPerWeek so explicit null saves to DB
+        ...(Object.prototype.hasOwnProperty.call(req.body, 'trainingAge') && { trainingAge }),
         ...(goals                !== undefined && { goals }),
         ...(equipment            !== undefined && { equipment }),
         ...(injuryFlags          !== undefined && { injuryFlags }),
-        ...(daysPerWeek          !== undefined && { daysPerWeek }),
+        ...(Object.prototype.hasOwnProperty.call(req.body, 'daysPerWeek') && { daysPerWeek }),
         ...(biologicalSex        !== undefined && { biologicalSex }),
         ...(heightCm             !== undefined && { heightCm }),
         ...(weightKg             !== undefined && { weightKg }),

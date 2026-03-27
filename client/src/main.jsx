@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import './index.css';
 
 import AppShell from './components/layout/AppShell.jsx';
+import OnboardingGate from './components/layout/OnboardingGate.jsx';
 import Onboarding from './pages/Onboarding.jsx';
 import Today from './pages/Today.jsx';
 import Log from './pages/Log.jsx';
@@ -23,12 +24,14 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <BrowserRouter>
         <Routes>
           <Route path="/onboarding" element={<Onboarding />} />
-          <Route element={<AppShell />}>
-            <Route index element={<Navigate to="/today" replace />} />
-            <Route path="/today" element={<Today />} />
-            <Route path="/log" element={<Log />} />
-            <Route path="/coach" element={<Coach />} />
-            <Route path="/progress" element={<Progress />} />
+          <Route element={<OnboardingGate />}>
+            <Route element={<AppShell />}>
+              <Route index element={<Navigate to="/today" replace />} />
+              <Route path="/today" element={<Today />} />
+              <Route path="/log" element={<Log />} />
+              <Route path="/coach" element={<Coach />} />
+              <Route path="/progress" element={<Progress />} />
+            </Route>
           </Route>
         </Routes>
       </BrowserRouter>
