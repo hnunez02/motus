@@ -13,11 +13,11 @@ generator client {
 model User {
   id            String   @id @default(uuid())
   email         String   @unique
-  trainingAge   Int      @default(0)
+  trainingAge   Int?
   goals         Json     @default("[]")
   equipment     Json     @default("[]")
   injuryFlags   Json     @default("[]")
-  daysPerWeek         Int      @default(4)
+  daysPerWeek         Int?
   // ── Biometric profile ──
   biologicalSex       String?  // 'male' | 'female' | 'prefer_not_to_say'
   heightCm            Float?   // stored in cm, displayed in ft/in on device

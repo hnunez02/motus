@@ -11,7 +11,7 @@ export default function OnboardingGate() {
         const user = res.data?.user;
         // Consider onboarding complete if trainingAge has been set
         // (it's the first required step)
-        const complete = user && user.trainingAge !== null && user.trainingAge !== undefined && user.daysPerWeek !== null;
+        const complete = user && user.daysPerWeek !== null && user.daysPerWeek !== undefined;
         setStatus(complete ? 'complete' : 'needed');
       })
       .catch(() => {
