@@ -7,6 +7,7 @@ import { logRouter } from './routes/log.js';
 import { aiRouter } from './routes/ai.js';
 import { exercisesRouter } from './routes/exercises.js';
 import { progressRouter } from './routes/progress.js';
+import { measurementsRouter } from './routes/measurements.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -42,6 +43,7 @@ app.use('/api/log', logRouter);
 app.use('/api/ai', aiRouter);
 app.use('/api/exercises', exercisesRouter);
 app.use('/api/progress', progressRouter);
+app.use('/api/measurements', measurementsRouter);
 
 app.use(errorHandler);
 

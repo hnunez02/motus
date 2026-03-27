@@ -16,8 +16,11 @@ import {
   ReferenceLine,
 } from 'recharts';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import api from '../lib/api.js';
 import Settings from './Settings.jsx';
+import MuscleVolumeCard from '../components/MuscleVolumeCard.jsx';
+import MeasurementsCard from '../components/MeasurementsCard.jsx';
 
 // ── Volume landmarks (Israetel et al.) ────────────────────────────────────
 
@@ -193,13 +196,14 @@ function ChartCard({ title, subtitle, children }) {
 
 function VolumeChart({ weeklyVolume }) {
   const [whyOpen, setWhyOpen] = useState(false);
+  const { t } = useTranslation();
   const data = buildVolumeData(weeklyVolume);
   const hasData = data.some((d) => d.sets > 0);
 
   return (
     <ChartCard
-      title="Weekly Volume"
-      subtitle="Aim to stay between the amber MEV (Minimum Effective Volume) and red MRV (Maximum Recoverable Volume) lines"
+      title={t('progress.weeklyVolume')}
+      subtitle={t('progress.weeklyVolumeDesc')}
     >
       <ResponsiveContainer width="100%" height={200}>
         <ComposedChart data={data} margin={{ top: 4, right: 4, left: -20, bottom: 30 }}>
@@ -320,6 +324,7 @@ function VolumeChart({ weeklyVolume }) {
 // ── 2. Strength chart ──────────────────────────────────────────────────────
 
 function StrengthChart({ sets, exercises }) {
+  const { t } = useTranslation();
   const [selectedId, setSelectedId] = useState('');
 
   useEffect(() => {
@@ -331,7 +336,7 @@ function StrengthChart({ sets, exercises }) {
   const data = buildStrengthData(sets, selectedId);
 
   return (
-    <ChartCard title="Estimated 1RM" subtitle="Epley formula: weight × (1 + reps/30)">
+    <ChartCard title={t('progress.estimated1rm')} subtitle="Epley formula: weight × (1 + reps/30)">
       {exercises.length === 0 ? (
         <p className="text-xs text-text-muted text-center py-8">
           No exercises logged yet
@@ -396,10 +401,11 @@ function StrengthChart({ sets, exercises }) {
 // ── 3. Fatigue trend chart ─────────────────────────────────────────────────
 
 function FatigueChart({ sets, fatigueScore }) {
+  const { t } = useTranslation();
   const data = buildFatigueTrend(sets);
 
   return (
-    <ChartCard title="Fatigue Trend" subtitle="Last 28 days — deload if red zone">
+    <ChartCard title={t('progress.fatigueTrend')} subtitle="Last 28 days — deload if red zone">
       <ResponsiveContainer width="100%" height={160}>
         <AreaChart data={data} margin={{ top: 4, right: 4, left: -16, bottom: 0 }}>
           <defs>
@@ -553,6 +559,7 @@ function ConsistencyCard({ sets }) {
 export default function Progress() {
   const location = useLocation();
   const [showSettings, setShowSettings] = useState(false);
+  const { t } = useTranslation();
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['progress'],
@@ -569,7 +576,7 @@ export default function Progress() {
       <div className="px-4 pb-4 flex items-start justify-between" style={{ paddingTop: 'max(2.5rem, env(safe-area-inset-top))' }}>
         <div>
           <h1 className="text-2xl font-display font-bold text-text-primary">
-            Progress
+            {t('progress.title')}
           </h1>
           {data?.deload?.shouldDeload && (
             <p className="text-xs text-orange-400 mt-1">{data.deload.reason}</p>
@@ -610,6 +617,8 @@ export default function Progress() {
             return (
               <>
                 <VolumeChart  weeklyVolume={safeWeeklyVolume} />
+                <MuscleVolumeCard weeklyVolume={safeWeeklyVolume} />
+                <MeasurementsCard />
                 <StrengthChart sets={safeSets} exercises={safeExercises} />
                 <FatigueChart  sets={safeSets} fatigueScore={data?.fatigueScore ?? 0} />
                 <ConsistencyCard sets={safeSets} />
