@@ -6,19 +6,23 @@ export default function OnboardingGate() {
   const [status, setStatus] = useState('loading'); // 'loading' | 'needed' | 'complete'
 
   useEffect(() => {
+    // Timeout after 5s so airplane mode never hangs the app on the loading screen
+    const timeout = setTimeout(() => setStatus('complete'), 5000);
+
     api.get('/api/auth/me')
       .then((res) => {
+        clearTimeout(timeout);
         const user = res.data?.user;
-        // Consider onboarding complete if trainingAge has been set
-        // (it's the first required step)
         const complete = user && user.daysPerWeek !== null && user.daysPerWeek !== undefined;
         setStatus(complete ? 'complete' : 'needed');
       })
       .catch(() => {
-        // If the request fails (not logged in, network error),
-        // let the app handle it — don't block
+        clearTimeout(timeout);
+        // Network error or not logged in — let the app handle auth downstream
         setStatus('complete');
       });
+
+    return () => clearTimeout(timeout);
   }, []);
 
   if (status === 'loading') {

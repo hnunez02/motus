@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import api from '../lib/api.js';
-import { useAI } from '../hooks/useAI.js';
+import { useAI, FALLBACK_WORKOUT } from '../hooks/useAI.js';
 import ChatBubble from '../components/chat/ChatBubble.jsx';
 import WorkoutCard from '../components/chat/WorkoutCard.jsx';
 import AtlasAvatar from '../components/ui/AtlasAvatar.jsx';
@@ -337,17 +337,63 @@ export default function Today() {
 
     const run = async () => {
       const c = ctxRef.current;
+
+      // Detect network errors from both axios (web) and Capacitor iOS (NSURLErrorDomain)
+      const isOfflineError = (err) => {
+        const msg    = String(err?.message ?? err?.errorMessage ?? '').toLowerCase();
+        const code   = String(err?.code ?? '');
+        const status = err?.response?.status ?? err?.status ?? 0;
+        return (
+          !navigator.onLine ||
+          code === 'NSURLErrorDomain' ||
+          code === 'ERR_NETWORK' ||
+          status === 503 ||
+          status === 0 ||
+          err?.response?.data?.offline === true ||
+          msg.includes('network connection was lost') ||
+          msg.includes('internet connection appears to be offline') ||
+          msg.includes('could not connect to the server') ||
+          msg.includes('network error') ||
+          msg.includes('connection lost') ||
+          msg.includes('offline') ||
+          msg.includes('timeout') ||
+          msg.includes('timed out')
+        );
+      };
+
+      // Load most recent cached workout from localStorage
+      const getCached = () => {
+        try {
+          const raw = localStorage.getItem('motus_recent_workouts');
+          if (raw) {
+            const list = JSON.parse(raw);
+            if (Array.isArray(list) && list.length > 0) return list[0];
+          }
+        } catch {}
+        return null;
+      };
+
       try {
-        const result = await generateSession.mutateAsync({
-          modality:      c.modality,
-          split:         c.split,
-          muscleGroups:  c.muscleGroups,
-          goal:          c.goal || c.cardioType,
-          cardioType:    c.cardioType,
-          duration:      c.duration,
-          environment:   c.environment,
-          homeEquipment: c.homeEquipment,
-        });
+        let result;
+        try {
+          result = await generateSession.mutateAsync({
+            modality:      c.modality,
+            split:         c.split,
+            muscleGroups:  c.muscleGroups,
+            goal:          c.goal || c.cardioType,
+            cardioType:    c.cardioType,
+            duration:      c.duration,
+            environment:   c.environment,
+            homeEquipment: c.homeEquipment,
+          });
+        } catch (err) {
+          if (isOfflineError(err)) {
+            // Use cached or hardcoded fallback — never show an error to the user
+            result = { ...(getCached() ?? FALLBACK_WORKOUT), fromCache: true };
+          } else {
+            throw err;
+          }
+        }
 
         if (
           !result?.exercises ||
@@ -369,7 +415,8 @@ export default function Today() {
             "I ran into a snag building that session — check your connection and try again, athlete."
           ),
         ]);
-        setCtx((prev) => ({ ...prev, step: 'done' }));
+        generationFiredRef.current = false;
+        setCtx((prev) => ({ ...prev, step: 'modality' }));
       }
     };
 

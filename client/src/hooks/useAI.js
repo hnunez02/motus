@@ -27,7 +27,7 @@ function getWorkoutFromCache() {
 }
 
 // ── hardcoded fallback plan ────────────────────────────────────────────
-const FALLBACK_WORKOUT = {
+export const FALLBACK_WORKOUT = {
   sessionTitle: 'Full Body — Dumbbell & Bodyweight',
   rationale: 'Offline fallback — balanced full-body session requiring only dumbbells or bodyweight.',
   fatigueNote: null,
@@ -104,13 +104,29 @@ export function useAI() {
         saveWorkoutToCache(data);
         return data;
       } catch (err) {
-        // Detect offline / server-unavailable conditions
+        // Detect offline / server-unavailable conditions.
+        // Must handle both axios (web) and Capacitor iOS (NSURLErrorDomain) errors.
+        const msg    = String(err?.message ?? err?.errorMessage ?? '').toLowerCase();
+        const code   = String(err?.code ?? '');
+        const status = err?.response?.status ?? err?.status ?? 0;
         const isOffline =
           !navigator.onLine ||
-          err?.response?.status === 503 ||
+          status === 503 ||
+          status === 0 ||
           err?.response?.data?.offline === true ||
-          err?.code === 'ERR_NETWORK' ||
-          err?.message === 'Network Error';
+          // Axios / web
+          code === 'ERR_NETWORK' ||
+          // Capacitor iOS — NSURLErrorDomain error codes
+          code === 'NSURLErrorDomain' ||
+          // Message-based fallbacks (covers both platforms)
+          msg.includes('network connection was lost') ||
+          msg.includes('internet connection appears to be offline') ||
+          msg.includes('could not connect to the server') ||
+          msg.includes('network error') ||
+          msg.includes('connection lost') ||
+          msg.includes('offline') ||
+          msg.includes('timeout') ||
+          msg.includes('timed out');
 
         if (isOffline) {
           const cached = getWorkoutFromCache();
