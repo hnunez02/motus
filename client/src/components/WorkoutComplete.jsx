@@ -21,6 +21,7 @@ import { motion } from 'framer-motion';
 import { useReducedMotion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import AtlasAnimator from './AtlasAnimator.jsx';
+import { cacheSession } from '../lib/offlineQueue.js';
 
 // ── Intensity dot colours (matches MuscleMap scale) ───────────────────────────
 function intensityDot(intensity) {
@@ -257,7 +258,24 @@ export default function WorkoutComplete({
 
           <motion.button
             whileTap={prefersReduced ? {} : { scale: 0.97 }}
-            onClick={onDone}
+            onClick={() => {
+              cacheSession({
+                date: new Date().toISOString(),
+                sessionTitle,
+                durationMin,
+                totalSets,
+                totalVolume,
+                avgRpe,
+                musclesTrained,
+                sets: loggedSets.map((s) => ({
+                  exerciseName: s.exerciseName || null,
+                  weight: s.weight,
+                  reps: s.reps,
+                  rpe: s.rpe,
+                })),
+              });
+              onDone();
+            }}
             style={{
               flex: 2,
               padding: '14px 0',

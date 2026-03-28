@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import api from '../lib/api.js';
+import { getCachedSessions } from '../lib/offlineQueue.js';
 
 // Group flat set array into workout sessions by calendar day
 function groupByDay(sets) {
@@ -106,6 +107,7 @@ export default function Log() {
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['workout-history'],
     queryFn: () => api.get('/api/log/history?days=60').then((r) => r.data),
+    retry: 1,
   });
 
   // Refetch whenever this tab becomes active
@@ -113,7 +115,19 @@ export default function Log() {
     refetch();
   }, [location.pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const workouts = groupByDay(data?.sets || []);
+  // Fall back to local cache when offline
+  const cachedSessions = getCachedSessions();
+  const cachedAsSets = cachedSessions.flatMap((session) =>
+    (session.sets || []).map((s) => ({
+      loggedAt: session.date,
+      actualWeight: s.weight,
+      actualReps: s.reps,
+      loggedRpe: s.rpe,
+      exercise: { name: s.exerciseName },
+    }))
+  );
+
+  const workouts = groupByDay(isError ? cachedAsSets : (data?.sets || []));
 
   return (
     <div style={{ padding: '0 16px 80px' }}>
@@ -131,12 +145,26 @@ export default function Log() {
       )}
 
       {isError && (
-        <p style={{ color: '#D85A30', fontSize: 14, textAlign: 'center', marginTop: 40 }}>
-          Couldn't load workout history. Check your connection.
-        </p>
+        <div style={{
+          marginBottom: 16,
+          padding: '8px 12px',
+          borderRadius: 12,
+          backgroundColor: 'rgba(245,158,11,0.1)',
+          border: '1px solid rgba(245,158,11,0.2)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+        }}>
+          <span style={{ color: '#FBBF24', fontSize: 14 }}>⚡</span>
+          <p style={{ color: '#FBBF24', fontSize: 12, fontWeight: 500, margin: 0 }}>
+            {cachedSessions.length > 0
+              ? 'Offline — showing your last synced sessions'
+              : 'Offline — no cached sessions yet'}
+          </p>
+        </div>
       )}
 
-      {!isLoading && !isError && workouts.length === 0 && (
+      {!isLoading && workouts.length === 0 && (
         <div style={{ textAlign: 'center', marginTop: 60 }}>
           <p style={{ fontSize: 32, marginBottom: 12 }}>🦉</p>
           <p style={{ color: '#888', fontSize: 14 }}>

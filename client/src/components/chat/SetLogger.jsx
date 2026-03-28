@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import api from '../../lib/api.js';
+import { enqueueSet } from '../../lib/offlineQueue.js';
 import { RPE_DESCRIPTIONS } from '../../lib/constants.js';
 
 export default function SetLogger({
@@ -65,8 +66,16 @@ export default function SetLogger({
         message:         data.message        ?? null,
       });
     } catch (err) {
-      console.error('Log set failed:', err);
-      // Advance session even if server is unavailable
+      console.error('Log set failed — queuing for retry:', err);
+      enqueueSet({
+        plannedSetId:  plannedSetId  || null,
+        exerciseId:    exerciseId    || null,
+        exerciseName:  exerciseName  || null,
+        actualWeight:  w,
+        actualReps:    r,
+        loggedRpe:     rpe,
+      });
+      // Still advance the workout UI
       onLog({ weight: w, reps: r, rpe, rpeDelta: null, newFatigueScore: null, message: null });
     } finally {
       setIsLogging(false);
