@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import api from '../lib/api.js';
 import { useAI } from '../hooks/useAI.js';
 import ChatBubble from '../components/chat/ChatBubble.jsx';
@@ -27,30 +28,13 @@ let _msgId = 0;
 const atlasBubble = (content) => ({ id: ++_msgId, role: 'atlas', content });
 const userBubble  = (content) => ({ id: ++_msgId, role: 'user',  content });
 
-// ── static option sets ────────────────────────────────────────────────
-const SPLIT_OPTIONS = [
-  { id: 'push',      label: 'Push'      },
-  { id: 'pull',      label: 'Pull'      },
-  { id: 'legs',      label: 'Legs'      },
-  { id: 'upper',     label: 'Upper'     },
-  { id: 'full_body', label: 'Full Body' },
-];
-
-const GOAL_OPTIONS = [
-  { id: 'strength',    label: 'Strength (heavy, low reps)'       },
-  { id: 'hypertrophy', label: 'Hypertrophy (moderate, volume)'   },
-  { id: 'endurance',   label: 'Pump / Endurance (light, high reps)' },
-];
-
-const CARDIO_OPTIONS = [
-  { id: 'zone2', label: 'Zone 2'    },
-  { id: 'hiit',  label: 'HIIT'     },
-  { id: 'liss',  label: 'LISS'     },
-  { id: 'tempo', label: 'Tempo Run' },
-];
+// ── static option sets (labels are translated inside the component) ───
 
 const LIFT_DURATIONS   = ['45 min', '60 min', '75 min', '90 min'];
 const CARDIO_DURATIONS = ['20 min', '30 min', '45 min', '60 min'];
+
+// ── session persistence key ────────────────────────────────────────────
+const SESSION_KEY = 'motus_active_workout';
 
 // ── initial context ────────────────────────────────────────────────────
 const INIT_CTX = {
@@ -69,13 +53,45 @@ const INIT_CTX = {
 
 // ─────────────────────────────────────────────────────────────────────
 export default function Today() {
+  const { t } = useTranslation();
   const { generateSession } = useAI();
+
+  // Translated option sets (must be inside component to react to language changes)
+  const SPLIT_OPTIONS = [
+    { id: 'push',      label: t('today.splits.push')     },
+    { id: 'pull',      label: t('today.splits.pull')     },
+    { id: 'legs',      label: t('today.splits.legs')     },
+    { id: 'upper',     label: t('today.splits.upper')    },
+    { id: 'full_body', label: t('today.splits.fullBody') },
+  ];
+  const GOAL_OPTIONS = [
+    { id: 'strength',    label: t('today.goals.strength')    },
+    { id: 'hypertrophy', label: t('today.goals.hypertrophy') },
+    { id: 'endurance',   label: t('today.goals.endurance')   },
+  ];
+  const CARDIO_OPTIONS = [
+    { id: 'zone2', label: t('today.cardioTypes.zone2') },
+    { id: 'hiit',  label: t('today.cardioTypes.hiit')  },
+    { id: 'liss',  label: t('today.cardioTypes.liss')  },
+    { id: 'tempo', label: t('today.cardioTypes.tempo') },
+  ];
   const scrollRef = useRef(null);
   const prefersReduced = useReducedMotion();
 
   const [messages,      setMessages]      = useState([]);
-  const [ctx,           setCtx]           = useState(INIT_CTX);
+  const [ctx,           setCtx]           = useState(() => {
+    try {
+      const saved = sessionStorage.getItem(SESSION_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed?.step === 'done' && parsed?.generatedPlan) return parsed;
+      }
+    } catch {}
+    return INIT_CTX;
+  });
   const [atlasEmotion,  setAtlasEmotion]  = useState('idle');
+  const [showQuitModal, setShowQuitModal] = useState(false);
+  const [slowConnection, setSlowConnection] = useState(false);
   const atlasTimerRef = useRef(null);
 
   // Track whether generation has been fired to prevent double-run in StrictMode
@@ -112,14 +128,10 @@ export default function Today() {
     const score = fatigueData?.fatigueScore ?? 0;
 
     if (score > 7.5) {
-      setMessages([
-        atlasBubble(
-          "Hey athlete! Your body has been working hard lately. I'm recommending a lighter session today based on your recent RPE data. Want to see what I have in mind, or push through?"
-        ),
-      ]);
+      setMessages([atlasBubble(t('today.fatigue.warning'))]);
       setCtx((c) => ({ ...c, step: 'fatigue_override' }));
     } else {
-      setMessages([atlasBubble('Where are you training today?')]);
+      setMessages([atlasBubble(t('today.whereTraining'))]);
       setCtx((c) => ({ ...c, step: 'environment' }));
     }
   }, [fatigueData, ctx.step]);
@@ -145,6 +157,25 @@ export default function Today() {
     return () => clearTimeout(timer);
   }, [ctx.step]);
 
+  // ── slow connection detection during generation ───────────────────
+  useEffect(() => {
+    if (ctx.step !== 'generating') {
+      setSlowConnection(false);
+      return;
+    }
+    const timer = setTimeout(() => setSlowConnection(true), 8000);
+    return () => clearTimeout(timer);
+  }, [ctx.step]);
+
+  // ── persist active workout to survive tab switches ────────────────
+  useEffect(() => {
+    if (ctx.step === 'done' && ctx.generatedPlan) {
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(ctx));
+    } else if (ctx.step === 'init') {
+      sessionStorage.removeItem(SESSION_KEY);
+    }
+  }, [ctx]);
+
   // ── helpers ───────────────────────────────────────────────────────
   const addMessage = useCallback((msg) => {
     setMessages((prev) => [...prev, msg]);
@@ -165,14 +196,14 @@ export default function Today() {
 
   // ── step handlers ─────────────────────────────────────────────────
   const handleFatigueChoice = useCallback(
-    async (label) => {
+    async (label, id) => {
       addMessage(userBubble(label));
-      const forcedDeload = label === 'Show me the lighter session';
+      const forcedDeload = id === 'lighter';
       setCtx((c) => ({ ...c, forcedDeload }));
-      await atlasReply('Where are you training today?');
+      await atlasReply(t('today.whereTraining'));
       setCtx((c) => ({ ...c, step: 'environment' }));
     },
-    [addMessage, atlasReply]
+    [addMessage, atlasReply, t]
   );
 
   const handleEnvironment = useCallback(
@@ -180,10 +211,10 @@ export default function Today() {
       addMessage(userBubble(label));
       setCtx((c) => ({ ...c, environment: id }));
       if (id === 'home') {
-        await atlasReply('What equipment do you have access to?');
+        await atlasReply(t('today.whatEquipment'));
         setCtx((c) => ({ ...c, step: 'home_equipment' }));
       } else {
-        await atlasReply('What do we work on today?');
+        await atlasReply(t('today.whatWork'));
         setCtx((c) => ({ ...c, step: 'modality' }));
       }
     },
@@ -191,11 +222,16 @@ export default function Today() {
   );
 
   const handleHomeEquipment = useCallback(async (selectedEquipment) => {
-    const map = { dumbbells: 'Dumbbells', cables: 'Cables', mat: 'Mat / Bodyweight', pullup_bar: 'Pull-up Bar' };
+    const map = {
+      dumbbells:  t('today.equipment.dumbbells'),
+      cables:     t('today.equipment.cables'),
+      mat:        t('today.equipment.mat'),
+      pullup_bar: t('today.equipment.pullupBar'),
+    };
     const labels = selectedEquipment.map((e) => map[e] || e).join(', ');
     addMessage(userBubble(labels));
     setCtx((c) => ({ ...c, homeEquipment: selectedEquipment }));
-    await atlasReply('What do we work on today?');
+    await atlasReply(t('today.whatWork'));
     setCtx((c) => ({ ...c, step: 'modality' }));
   }, [addMessage, atlasReply]);
 
@@ -203,10 +239,10 @@ export default function Today() {
     async (label, id) => {
       addMessage(userBubble(label));
       if (id === 'lift') {
-        await atlasReply('Push, pull, or legs?');
+        await atlasReply(t('today.pushPullLegs'));
         setCtx((c) => ({ ...c, modality: 'lift', step: 'split' }));
       } else {
-        await atlasReply('What type of cardio?');
+        await atlasReply(t('today.cardioType'));
         setCtx((c) => ({ ...c, modality: 'cardio', step: 'cardio_type' }));
       }
     },
@@ -216,7 +252,7 @@ export default function Today() {
   const handleSplit = useCallback(
     async (label, id) => {
       addMessage(userBubble(label));
-      await atlasReply('Which muscles are the focus?');
+      await atlasReply(t('today.whichMuscles'));
       setCtx((c) => ({ ...c, split: id, step: 'muscle_groups' }));
     },
     [addMessage, atlasReply]
@@ -225,7 +261,7 @@ export default function Today() {
   const handleCardioType = useCallback(
     async (label, id) => {
       addMessage(userBubble(label));
-      await atlasReply('How long do you have?');
+      await atlasReply(t('today.howLong'));
       setCtx((c) => ({ ...c, cardioType: id, step: 'duration' }));
     },
     [addMessage, atlasReply]
@@ -245,14 +281,14 @@ export default function Today() {
       .map((slug) => SLUG_LABEL[slug] || MUSCLE_LABEL[slug] || slug)
       .join(', ');
     addMessage(userBubble(labels));
-    await atlasReply("What's the goal for today?");
+    await atlasReply(t('today.goal'));
     setCtx((c) => ({ ...c, step: 'goal' }));
   }, [ctx.muscleGroups, addMessage, atlasReply]);
 
   const handleGoal = useCallback(
     async (label, id) => {
       addMessage(userBubble(label));
-      await atlasReply('How long do you have?');
+      await atlasReply(t('today.howLong'));
       setCtx((c) => ({ ...c, goal: id, step: 'duration' }));
     },
     [addMessage, atlasReply]
@@ -269,10 +305,24 @@ export default function Today() {
   );
 
   const handleWorkoutComplete = useCallback(() => {
-    // Reset back to chat flow for a new session
     generationFiredRef.current = false;
+    sessionStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem('motus_workout_progress');
     setCtx(INIT_CTX);
-    setMessages([atlasBubble('Great work, athlete! Want to plan another session?')]);
+    setMessages([atlasBubble(t('today.newSession'))]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleQuitWorkout = useCallback((saveProgress) => {
+    generationFiredRef.current = false;
+    sessionStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem('motus_workout_progress');
+    setShowQuitModal(false);
+    setCtx(INIT_CTX);
+    setMessages([atlasBubble(
+      saveProgress
+        ? "Progress saved! Great effort today. Ready for another session?"
+        : "Workout discarded. No worries — come back when you're ready!"
+    )]);
   }, []);
 
   // ── generation effect ─────────────────────────────────────────────
@@ -340,8 +390,11 @@ export default function Today() {
       case 'fatigue_override':
         return (
           <ChipRow
-            chips={['Show me the lighter session', "I feel good, let's go"]}
-            onSelect={(label) => handleFatigueChoice(label)}
+            chips={[
+              { id: 'lighter', label: t('today.fatigue.lighter') },
+              { id: 'push',    label: t('today.fatigue.pushThrough') },
+            ]}
+            onSelect={handleFatigueChoice}
           />
         );
 
@@ -349,8 +402,8 @@ export default function Today() {
         return (
           <div className="flex flex-col gap-3 px-1 pt-1 pb-2">
             {[
-              { id: 'gym',  label: '🏋️ Gym',  sub: 'Full equipment' },
-              { id: 'home', label: '🏠 Home', sub: 'Dumbbells, bands, bodyweight' },
+              { id: 'gym',  label: t('today.gym.label'),  sub: t('today.gym.sub')  },
+              { id: 'home', label: t('today.home.label'), sub: t('today.home.sub') },
             ].map((opt) => (
               <motion.button
                 key={opt.id}
@@ -367,14 +420,14 @@ export default function Today() {
 
       case 'home_equipment': {
         const HOME_EQUIPMENT_OPTIONS = [
-          { id: 'dumbbells',  label: '🏋️ Dumbbells' },
-          { id: 'cables',     label: '🔗 Cables / Resistance Bands' },
-          { id: 'mat',        label: '🧘 Mat / Bodyweight Only' },
-          { id: 'pullup_bar', label: '🔝 Pull-up Bar' },
+          { id: 'dumbbells',  label: t('today.equipment.dumbbells') },
+          { id: 'cables',     label: t('today.equipment.cables')    },
+          { id: 'mat',        label: t('today.equipment.mat')       },
+          { id: 'pullup_bar', label: t('today.equipment.pullupBar') },
         ];
         return (
           <div className="flex flex-col gap-3 px-1 pt-1 pb-2">
-            <p className="text-[11px] text-text-muted font-mono text-center">Select all that apply</p>
+            <p className="text-[11px] text-text-muted font-mono text-center">{t('today.selectAll')}</p>
             {HOME_EQUIPMENT_OPTIONS.map((opt) => {
               const isSelected = ctx.homeEquipment.includes(opt.id);
               return (
@@ -414,8 +467,8 @@ export default function Today() {
         return (
           <ChipRow
             chips={[
-              { id: 'lift',   label: '💪 Lift'   },
-              { id: 'cardio', label: '🏃 Cardio' },
+              { id: 'lift',   label: t('today.lift')   },
+              { id: 'cardio', label: t('today.cardio') },
             ]}
             onSelect={handleModality}
           />
@@ -464,8 +517,20 @@ export default function Today() {
               <AtlasAnimator emotion="thinking" />
             </div>
             <p className="text-text-secondary text-sm font-mono animate-pulse">
-              Atlas is building your session... 🦉
+              {t('today.building')}
             </p>
+            <AnimatePresence>
+              {slowConnection && (
+                <motion.p
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="text-amber-400 text-xs font-mono text-center"
+                >
+                  Slow connection detected, still working…
+                </motion.p>
+              )}
+            </AnimatePresence>
           </div>
         );
 
@@ -478,10 +543,67 @@ export default function Today() {
   // Full-screen workout player once a plan has been generated
   if (ctx.step === 'done' && ctx.generatedPlan) {
     return (
-      <WorkoutCard
-        session={ctx.generatedPlan}
-        onComplete={handleWorkoutComplete}
-      />
+      <div className="relative">
+        <WorkoutCard
+          session={ctx.generatedPlan}
+          onComplete={handleWorkoutComplete}
+          onQuit={() => setShowQuitModal(true)}
+          offlineMode={!!ctx.generatedPlan.fromCache}
+        />
+
+        {/* Quit confirmation modal */}
+        <AnimatePresence>
+          {showQuitModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 bg-black/70 flex items-end justify-center"
+              onClick={() => setShowQuitModal(false)}
+            >
+              <motion.div
+                initial={{ y: '100%' }}
+                animate={{ y: 0 }}
+                exit={{ y: '100%' }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                className="w-full bg-surface-card rounded-t-[24px] p-6"
+                style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="w-10 h-1 bg-surface-elevated rounded-full mx-auto mb-6" />
+                <h3 className="text-lg font-display font-bold text-text-primary mb-1">
+                  Quit workout?
+                </h3>
+                <p className="text-sm text-text-muted mb-6">
+                  You have an active workout in progress.
+                </p>
+                <div className="space-y-3">
+                  <motion.button
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => handleQuitWorkout(true)}
+                    className="w-full py-4 rounded-card bg-brand text-white font-semibold text-base"
+                  >
+                    Save progress &amp; quit
+                  </motion.button>
+                  <motion.button
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => handleQuitWorkout(false)}
+                    className="w-full py-4 rounded-card bg-surface-elevated text-red-400 font-semibold text-base border border-red-500/20"
+                  >
+                    Discard &amp; quit
+                  </motion.button>
+                  <button
+                    onClick={() => setShowQuitModal(false)}
+                    className="w-full py-3 text-sm text-text-muted"
+                  >
+                    Keep going →
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     );
   }
 
@@ -497,7 +619,7 @@ export default function Today() {
             Atlas
           </p>
           <h1 className="text-base font-display font-bold text-text-primary leading-tight">
-            Today's Session
+            {t('today.title')}
           </h1>
         </div>
       </div>
@@ -588,11 +710,12 @@ function ChipRow({ chips, onSelect }) {
 // [ ] Flow 1: Selected muscles passed correctly to Atlas API prompt
 // [ ] Both flows: reduced motion guard applied
 function MuscleMapSelector({ selected, onMuscleSelect, onConfirm, prefersReduced }) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-3 px-1 pb-2">
       {/* Hint */}
       <p className="text-[11px] text-text-muted text-center font-mono">
-        Tap muscles to select
+        {t('today.tapToSelect')}
       </p>
 
       {/* MuscleMap owns selection state internally; it renders the button grid + chips */}
@@ -612,7 +735,7 @@ function MuscleMapSelector({ selected, onMuscleSelect, onConfirm, prefersReduced
           className="w-full py-3.5 rounded-card bg-brand text-white font-semibold text-sm
                      disabled:cursor-not-allowed"
         >
-          Build my workout →
+          {t('today.buildWorkout')}
         </motion.button>
       </div>
     </div>

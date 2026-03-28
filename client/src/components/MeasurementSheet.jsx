@@ -97,6 +97,7 @@ export default function MeasurementSheet({ onClose, onSaved }) {
               value={value}
               onChange={(e) => setValue(e.target.value)}
               onFocus={(e) => e.target.select()}
+              style={{ fontSize: '16px' }}
               className="flex-1 bg-surface-elevated text-text-primary rounded-card px-4 py-3 text-sm outline-none"
             />
             <div className="flex rounded-card overflow-hidden border border-surface-elevated">

@@ -1,26 +1,21 @@
 import { Health } from '@flomentumsolutions/capacitor-health-extended';
 
+// Correct permission strings for @flomentumsolutions/capacitor-health-extended
 const READ_PERMISSIONS = [
-  'HEART_RATE',
-  'RESTING_HEART_RATE',
-  'HEART_RATE_VARIABILITY',
-  'SLEEP',
-  'ACTIVE_CALORIES',
-  'WEIGHT',
-  'STEPS',
+  'READ_HEART_RATE',
+  'READ_HRV',
+  'READ_STEPS',
+  'READ_ACTIVE_CALORIES',
+  'READ_WEIGHT',
+  'READ_MINDFULNESS', // used for sleep
 ];
 
 export async function requestHealthKitPermissions() {
   try {
-    const available = await Health.isAvailable();
-    if (!available?.available) return false;
-    await Health.requestHealthPermissions({
-      read: READ_PERMISSIONS,
-      write: [],
-    });
+    await Health.requestHealthPermissions({ permissions: READ_PERMISSIONS });
     return true;
   } catch (err) {
-    console.log('HealthKit not available or denied:', err.message);
+    console.log('requestHealthPermissions failed:', err.message);
     return false;
   }
 }

@@ -17,7 +17,7 @@ const EXERCISES = [
       'Bar path slightly diagonal — touch below chest, press toward face',
       'Squeeze the bar like you\'re trying to bend it apart',
     ],
-    videoUrl: 'SCVCLChPQZY',
+    videoUrl: 'ejI1Nlsul9k',
   },
   {
     name: 'Incline Dumbbell Press',
@@ -32,7 +32,7 @@ const EXERCISES = [
       'Lower slowly with a 2-3 second eccentric for more stretch',
       'Keep wrists stacked over elbows throughout',
     ],
-    videoUrl: 'IP4oeKh-NGs',
+    videoUrl: '5CECBjd7HLQ',
   },
   {
     name: 'Overhead Press',
@@ -47,7 +47,7 @@ const EXERCISES = [
       'Squeeze glutes and brace core to protect lower back',
       'Full lockout at top — shrug slightly to engage traps',
     ],
-    videoUrl: 'F3QY5vMz_6I',
+    videoUrl: 'G2qpTG1Eh40',
   },
   {
     name: 'Cable Fly',
@@ -62,6 +62,7 @@ const EXERCISES = [
       'Squeeze chest hard at the crossover point',
       'Control the eccentric — don\'t let cables yank your arms back',
     ],
+    videoUrl: '4mfLHnFL0Uw'
   },
   {
     name: 'Dumbbell Lateral Raise',
@@ -76,6 +77,7 @@ const EXERCISES = [
       'Stop at shoulder height — going higher reduces delt tension',
       'Use a 2-second pause at the top for max time under tension',
     ],
+    videoUrl: 'XPPfnSEATJA'
   },
   {
     name: 'Tricep Pushdown',
@@ -90,6 +92,7 @@ const EXERCISES = [
       'Control the return — don\'t let the weight stack bounce',
       'Slight forward lean allows better long-head stretch',
     ],
+    videoUrl: '6Fzep104f0s'
   },
   {
     name: 'Close-Grip Bench Press',
@@ -104,6 +107,7 @@ const EXERCISES = [
       'Touch lower chest to maximize tricep stretch at bottom',
       'Press through the heel of your palm',
     ],
+    videoUrl: 'FiQUzPtS90E'
   },
   {
     name: 'Dips',
@@ -118,7 +122,7 @@ const EXERCISES = [
       'Control the descent — 2-3 second eccentric',
       'Fully lock out at the top to recruit all tricep heads',
     ],
-    videoUrl: 'yU5GkGQFozE',
+    videoUrl: '4la6BkUBLgo',
   },
   {
     name: 'Machine Chest Press',
@@ -133,6 +137,7 @@ const EXERCISES = [
       'Full stretch at the bottom — don\'t cut the ROM',
       'Great for dropsets and high-rep finisher work',
     ],
+    videoUrl: 'sqNwDkUU_Ps'
   },
   {
     name: 'Incline Cable Fly',
@@ -147,6 +152,7 @@ const EXERCISES = [
       'Squeeze at top and hold 1 second',
       'Slight elbow bend throughout — never lock out elbows',
     ],
+    videoUrl: 'GtHNC-5GtR0'
   },
 
   // ─── PULL ───────────────────────────────────────────────────────────
@@ -163,7 +169,7 @@ const EXERCISES = [
       'Lead with your elbows, not your hands',
       'Squeeze shoulder blades together at peak contraction',
     ],
-    videoUrl: 'FWJR5Ve8bnQ',
+    videoUrl: 'bm0_q9bR_HA',
   },
   {
     name: 'Weighted Pull-Up',
@@ -178,6 +184,7 @@ const EXERCISES = [
       'Chest to bar if possible — don\'t half rep',
       'Control the eccentric — 2-3 seconds down',
     ],
+    videoUrl: 'fnJ0F1Xsu7Y'
   },
   {
     name: 'Seated Cable Row',
@@ -192,6 +199,7 @@ const EXERCISES = [
       'Keep torso upright — don\'t row with your lower back',
       'Pause 1 second at peak contraction',
     ],
+    videoUrl: 'UCXxvVItLoM'
   },
   {
     name: 'Lat Pulldown',
@@ -206,7 +214,7 @@ const EXERCISES = [
       'Full stretch at top — let lats elongate before next rep',
       'Wide grip increases lat stretch; close grip increases ROM',
     ],
-    videoUrl: 'CAwf7n6Luuc',
+    videoUrl: 'trZQjegcRx0',
   },
   {
     name: 'Face Pull',
@@ -221,6 +229,7 @@ const EXERCISES = [
       'High rep, light weight — this is corrective work',
       'Don\'t let elbows drop below shoulder height',
     ],
+    videoUrl: '0Po47vvj9g4'
   },
   {
     name: 'Barbell Curl',
@@ -235,7 +244,7 @@ const EXERCISES = [
       'Full extension at the bottom — don\'t cut the stretch',
       'EZ-bar reduces wrist stress for high-frequency training',
     ],
-    videoUrl: '6ooQhOEIBGM',
+    videoUrl: 'ZQWL7omZh94',
   },
   {
     name: 'Hammer Curl',
@@ -250,6 +259,7 @@ const EXERCISES = [
       'Curl across body for cross-body hammer variant',
       'Squeeze hard at top, slow down on the way down',
     ],
+    videoUrl: 'P5sXHLmXmBM'
   },
   {
     name: 'Incline Dumbbell Curl',
@@ -264,6 +274,7 @@ const EXERCISES = [
       'Supinate fully at the top',
       'Best stretch-position bicep exercise available',
     ],
+    videoUrl: '4FbGrHJyG8o'
   },
   {
     name: 'Meadows Row',
@@ -278,6 +289,7 @@ const EXERCISES = [
       'Allows greater ROM than standard row',
       'Great for unilateral back development',
     ],
+    videoUrl: 'w1d_wD0v3gc'
   },
   {
     name: 'Cable Pullover',
@@ -292,6 +304,7 @@ const EXERCISES = [
       'Keep core braced — don\'t hyperextend lower back',
       'Straight-arm variation hits lats without bicep fatigue',
     ],
+    videoUrl: 'Kjew7DbVAD8'
   },
 
   // ─── LEGS ────────────────────────────────────────────────────────────
@@ -308,7 +321,7 @@ const EXERCISES = [
       'Break parallel — hip crease below knee at minimum',
       'Drive through the whole foot — not just heels',
     ],
-    videoUrl: 'Uv_DKDl7EjA',
+    videoUrl: 'rrJIyZGlK8c',
   },
   {
     name: 'Romanian Deadlift',
@@ -323,7 +336,7 @@ const EXERCISES = [
       'Feel a deep hamstring stretch — go until neutral spine breaks',
       'Drive hips through at the top — full glute contraction',
     ],
-    videoUrl: 'JCXUYuzwNrM',
+    videoUrl: '7j-2w4-P14I',
   },
   {
     name: 'Leg Press',
@@ -338,6 +351,7 @@ const EXERCISES = [
       'Don\'t lock knees out — keep slight tension throughout',
       'Full ROM — bring knees close to chest at the bottom',
     ],
+    videoUrl: 'q4W4_VJbKW0'
   },
   {
     name: 'Bulgarian Split Squat',
@@ -352,7 +366,7 @@ const EXERCISES = [
       'Drive through heel of front foot to bias glutes',
       'Excellent unilateral stretch-position quad exercise',
     ],
-    videoUrl: 'ot_to1gCHGI',
+    videoUrl: 'Fmjj7wFJWRE',
   },
   {
     name: 'Leg Curl',
@@ -367,6 +381,7 @@ const EXERCISES = [
       'Point toes slightly to engage different hamstring heads',
       'Slow eccentric — 3 seconds on the way down',
     ],
+    videoUrl: 't9sTSr-JYSs'
   },
   {
     name: 'Hip Thrust',
@@ -381,7 +396,7 @@ const EXERCISES = [
       'Squeeze glutes at full extension — hold 1-2 seconds',
       'Drive through the whole foot — not just heels',
     ],
-    videoUrl: 'SEdqd9BoBLs',
+    videoUrl: 'pUdIL5x0fWg',
   },
   {
     name: 'Walking Lunges',
@@ -396,6 +411,7 @@ const EXERCISES = [
       'Back knee lightly touches the floor',
       'Push off front heel to stand — don\'t push off toes',
     ],
+    videoUrl: 'eFWCn5iEbTU'
   },
   {
     name: 'Leg Extension',
@@ -410,6 +426,7 @@ const EXERCISES = [
       'Adjust seat so knee aligns with machine pivot',
       'Use for metabolic pump work after compounds',
     ],
+    videoUrl: '4ZDm5EbiFI8'
   },
   {
     name: 'Standing Calf Raise',
@@ -424,6 +441,7 @@ const EXERCISES = [
       'Pause 1 second at peak contraction',
       'Calves require high reps and full ROM to grow',
     ],
+    videoUrl: 'g_E7_q1z2bo'
   },
   {
     name: 'Hack Squat',
@@ -438,6 +456,7 @@ const EXERCISES = [
       'Keep lower back in contact with pad throughout',
       'Drive through quads — don\'t push with hands on knees',
     ],
+    videoUrl: 'rYgNArpwE7E'
   },
 
   // ─── CARDIO ──────────────────────────────────────────────────────────
@@ -454,6 +473,7 @@ const EXERCISES = [
       'Arms relaxed at 90 degrees — don\'t cross body midline',
       'Breathe rhythmically — 2 steps in, 2 steps out at Zone 2',
     ],
+    videoUrl: 'K6I24WgiiPw'
   },
   {
     name: 'Stationary Bike',
@@ -468,6 +488,7 @@ const EXERCISES = [
       'Low-impact — ideal for active recovery days',
       'Zone 2: 60-70% max HR — able to hold a conversation',
     ],
+    videoUrl: 'E2osd64MVt4'
   },
   {
     name: 'Row Machine',
@@ -482,6 +503,7 @@ const EXERCISES = [
       'Maintain neutral spine — don\'t round lower back',
       'Full body engagement — most complete cardio machine',
     ],
+    videoUrl: 'ij4095Oo1BA'
   },
   {
     name: 'Jump Rope',
@@ -496,6 +518,7 @@ const EXERCISES = [
       'Keep jumps small — just enough to clear the rope',
       'Great for HIIT intervals: 30s on, 30s off',
     ],
+    videoUrl: 'u3zgHI8QnqE'
   },
   {
     name: 'Assault Bike',
@@ -510,6 +533,7 @@ const EXERCISES = [
       'For HIIT: max effort for 20-30s, full rest 2 min',
       'Most metabolically demanding cardio tool — use sparingly',
     ],
+    videoUrl: 'KC-ZSfOmXgE'
   },
   {
     name: 'Elliptical',
@@ -524,6 +548,7 @@ const EXERCISES = [
       'Low impact — excellent for recovery sessions',
       'Push handles to engage upper body',
     ],
+    videoUrl: 'RakIFxUmSpA'
   },
 
   // ─── COMPOUNDS (cross-category) ──────────────────────────────────────
@@ -540,7 +565,7 @@ const EXERCISES = [
       'Lat activation — "protect your armpits" cue',
       'Push the floor away — don\'t think of it as pulling',
     ],
-    videoUrl: 'ytGaGIn3SjE',
+    videoUrl: 'GxsLrTzyGUU',
   },
   {
     name: 'Trap Bar Deadlift',
@@ -555,6 +580,7 @@ const EXERCISES = [
       'Neutral grip reduces forearm fatigue',
       'Drive through the floor — hips and shoulders rise together',
     ],
+    videoUrl: 'VNgxEhOoOjo'
   },
   {
     name: 'Front Squat',
@@ -569,6 +595,7 @@ const EXERCISES = [
       'More upright torso than back squat — greater quad emphasis',
       'Keep core braced — this is an anti-flexion challenge',
     ],
+    videoUrl: 'uYumuL_G_V0'
   },
   {
     name: 'Power Clean',
@@ -583,6 +610,7 @@ const EXERCISES = [
       'Shrug and pull elbows high — bar stays close to body',
       'Catch in front rack position — elbows must be high',
     ],
+    videoUrl: 'e8TpDdMYq4Y'
   },
 
   // ─── MAT / BODYWEIGHT ──────────────────────────────────────────────
@@ -599,7 +627,7 @@ const EXERCISES = [
       'Flare elbows 45 degrees — not tucked, not winged out',
       'Push the floor away explosively on the way up',
     ],
-    videoUrl: 'IODxDxX7oi4',
+    videoUrl: 'WDIpL0pjun0',
   },
   {
     name: 'Pike Push-Up',
@@ -614,6 +642,7 @@ const EXERCISES = [
       'Press back up through your shoulders — think vertical press, not push-up',
       'Keep your core tight to avoid arching lower back',
     ],
+    videoUrl: 'XckEEwa1BPI'
   },
   {
     name: 'Diamond Push-Up',
@@ -628,6 +657,7 @@ const EXERCISES = [
       'Body stays rigid — no piking or sagging',
       'Full extension at the top — squeeze triceps hard',
     ],
+    videoUrl: 'XtU2VQVuLYs'
   },
   {
     name: 'Glute Bridge',
@@ -642,7 +672,7 @@ const EXERCISES = [
       'Squeeze glutes hard at the top, don\'t hyperextend your lower back',
       'Hold 1-2 seconds at peak contraction for max glute activation',
     ],
-    videoUrl: 'wPM8icPu6H8',
+    videoUrl: 'Xp33YgPZgns',
   },
   {
     name: 'Single-Leg Glute Bridge',
@@ -657,6 +687,7 @@ const EXERCISES = [
       'Squeeze the working glute at the top for 1-2 seconds',
       'Great for fixing left-right imbalances',
     ],
+    videoUrl: 'vdmlNaXSjd4'
   },
   {
     name: 'Bodyweight Squat',
@@ -671,6 +702,7 @@ const EXERCISES = [
       'Knees track over toes throughout — don\'t let them cave in',
       'Chest up, neutral spine — don\'t round forward',
     ],
+    videoUrl: 'l83R5PblSMA'
   },
   {
     name: 'Reverse Lunge',
@@ -685,6 +717,7 @@ const EXERCISES = [
       'Drive through the front heel to return to standing',
       'Easier on knees than forward lunges — good for beginners',
     ],
+    videoUrl: 'Ry-wqegeKlE'
   },
   {
     name: 'Plank',
@@ -699,6 +732,7 @@ const EXERCISES = [
       'Squeeze glutes and brace your abs as if taking a punch',
       'Breathe steadily — don\'t hold your breath',
     ],
+    videoUrl: 'pvIjsG5Svck'
   },
   {
     name: 'Dead Bug',
@@ -713,6 +747,7 @@ const EXERCISES = [
       'Keep lower back pressed firmly into the floor throughout',
       'Return slowly — control is more important than range',
     ],
+    videoUrl: 'o4GKiEoYClI'
   },
   {
     name: 'Bird Dog',
@@ -727,6 +762,7 @@ const EXERCISES = [
       'Don\'t rotate your torso — imagine a cup of water on your back',
       'Return with control, lightly touch floor before next rep',
     ],
+    videoUrl: 'k2azbhhuKuM'
   },
   {
     name: 'Superman Hold',
@@ -741,6 +777,7 @@ const EXERCISES = [
       'Squeeze glutes and lower back — hold 2-3 seconds at top',
       'Lower with control — don\'t drop',
     ],
+    videoUrl: 'LZoWdePF1NQ'
   },
   {
     name: 'Mountain Climbers',
@@ -755,6 +792,7 @@ const EXERCISES = [
       'Keep hips level — don\'t let them rise or sag',
       'Faster = more cardio, slower = more core stability work',
     ],
+    videoUrl: 'ruQ4ZwncXBg'
   },
   {
     name: 'Hollow Body Hold',
@@ -769,6 +807,7 @@ const EXERCISES = [
       'The lower your legs, the harder — keep lower back contact with floor',
       'Foundation of gymnastics — trains anti-extension core strength',
     ],
+    videoUrl: '3kC0YkaY6jo'
   },
   {
     name: 'Cossack Squat',
@@ -783,6 +822,7 @@ const EXERCISES = [
       'Keep chest tall — use arms for counterbalance if needed',
       'Excellent for hip mobility and single-leg strength',
     ],
+    videoUrl: 'iPZNB5GsOnM'
   },
 
   // ─── RESISTANCE BAND (home-friendly) ────────────────────────────────
@@ -799,6 +839,7 @@ const EXERCISES = [
       'Squeeze shoulder blades together at end range',
       'Control the return — don\'t let band snap back',
     ],
+    videoUrl: 'stwYTTPXubo'
   },
   {
     name: 'Resistance Band Row',
@@ -813,6 +854,7 @@ const EXERCISES = [
       'Pause at full contraction — chest tall, elbows behind body',
       'Control the eccentric — bands provide constant tension',
     ],
+    videoUrl: 'LSkyinhmA8k'
   },
   {
     name: 'Resistance Band Curl',
@@ -827,6 +869,7 @@ const EXERCISES = [
       'Bands increase resistance at the top — squeeze hard there',
       'Lower slowly for maximum time under tension',
     ],
+    videoUrl: 'pXS-fSPWpk8'
   },
   {
     name: 'Resistance Band Lateral Walk',
@@ -841,6 +884,7 @@ const EXERCISES = [
       'Don\'t let feet come together completely between steps',
       'Great glute med activation — targets the side of the glutes',
     ],
+    videoUrl: '6eoK_yxY8Ak'
   },
 ];
 

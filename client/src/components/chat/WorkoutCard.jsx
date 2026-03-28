@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import SetLogger from './SetLogger.jsx';
 import AtlasAvatar from '../ui/AtlasAvatar.jsx';
@@ -10,6 +11,9 @@ import { useMuscleIntensity } from '../MuscleMap.jsx';
 import { getMusclesForExercise } from '../../utils/exerciseMuscles.js';
 import YouTubeModal from '../YouTubeModal.jsx';
 
+// ── session key for workout progress persistence ───────────────────────
+const WC_SESSION_KEY = 'motus_workout_progress';
+
 // ── helpers ────────────────────────────────────────────────────────────
 function fmt(totalSeconds) {
   const m = Math.floor(totalSeconds / 60);
@@ -18,20 +22,45 @@ function fmt(totalSeconds) {
 }
 
 // ── WorkoutCard ────────────────────────────────────────────────────────
-export default function WorkoutCard({ session, onComplete }) {
+export default function WorkoutCard({ session, onComplete, onQuit, offlineMode = false }) {
+  const { t } = useTranslation();
   const safeExercises = Array.isArray(session?.exercises) ? session.exercises : [];
   const exercises = safeExercises;
 
-  const [currentExIdx,   setCurrentExIdx]   = useState(0);
-  const [currentSetIdx,  setCurrentSetIdx]  = useState(0);
+  const [currentExIdx,   setCurrentExIdx]   = useState(() => {
+    try {
+      const saved = sessionStorage.getItem(WC_SESSION_KEY);
+      if (saved) return JSON.parse(saved).currentExIdx ?? 0;
+    } catch {}
+    return 0;
+  });
+  const [currentSetIdx,  setCurrentSetIdx]  = useState(() => {
+    try {
+      const saved = sessionStorage.getItem(WC_SESSION_KEY);
+      if (saved) return JSON.parse(saved).currentSetIdx ?? 0;
+    } catch {}
+    return 0;
+  });
   const [phase,          setPhase]          = useState('active'); // 'active' | 'resting' | 'complete'
-  const [loggedSets,     setLoggedSets]     = useState([]);
+  const [loggedSets,     setLoggedSets]     = useState(() => {
+    try {
+      const saved = sessionStorage.getItem(WC_SESSION_KEY);
+      if (saved) return JSON.parse(saved).loggedSets ?? [];
+    } catch {}
+    return [];
+  });
   const [restSecsLeft,   setRestSecsLeft]   = useState(0);
   const [restStarted,    setRestStarted]    = useState(false);
   const [pending,        setPending]        = useState(null);  // { exIdx, setIdx }
   const [whyOpenIdx,     setWhyOpenIdx]     = useState(null);
   const [swapOpenIdx,    setSwapOpenIdx]    = useState(null);
-  const [swapped,        setSwapped]        = useState({});    // exIdx → name
+  const [swapped,        setSwapped]        = useState(() => {
+    try {
+      const saved = sessionStorage.getItem(WC_SESSION_KEY);
+      if (saved) return JSON.parse(saved).swapped ?? {};
+    } catch {}
+    return {};
+  });    // exIdx → name
   const [showVideo,      setShowVideo]      = useState(false);
   const [liveSecs,       setLiveSecs]       = useState(0);
   const [sessionStart]                      = useState(() => Date.now());
@@ -71,6 +100,18 @@ export default function WorkoutCard({ session, onComplete }) {
     console.log('WorkoutCard session:', JSON.stringify(session));
     console.log('Exercises count:', safeExercises.length);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── persist workout progress to survive tab switches ───────────────
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(WC_SESSION_KEY, JSON.stringify({
+        currentExIdx,
+        currentSetIdx,
+        loggedSets,
+        swapped,
+      }));
+    } catch {}
+  }, [currentExIdx, currentSetIdx, loggedSets, swapped]);
 
   // ── live session duration ──────────────────────────────────────────
   useEffect(() => {
@@ -178,7 +219,10 @@ export default function WorkoutCard({ session, onComplete }) {
         sessionTitle={session.sessionTitle}
         sessionStart={sessionStart}
         muscleIntensity={muscleIntensity}
-        onDone={onComplete}
+        onDone={() => {
+          sessionStorage.removeItem(WC_SESSION_KEY);
+          onComplete();
+        }}
       />
     );
   }
@@ -248,10 +292,29 @@ export default function WorkoutCard({ session, onComplete }) {
         style={{ paddingTop: 'max(2.5rem, env(safe-area-inset-top))' }}
       >
         <div className="flex items-center justify-between mb-2">
-          <p className="text-[10px] font-mono text-text-muted tabular-nums">{fmt(liveSecs)}</p>
+          {/* Timer */}
+          <p className="text-[10px] font-mono text-text-muted tabular-nums w-10">
+            {fmt(liveSecs)}
+          </p>
+
+          {/* Exercise counter — centered */}
           <span className="text-xs text-text-muted">
             {currentExIdx + 1} / {exercises.length} exercises
           </span>
+
+          {/* Quit button */}
+          <motion.button
+            whileTap={{ scale: 0.94 }}
+            onClick={onQuit}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-elevated border border-white/10 text-text-muted text-xs font-medium active:bg-white/10"
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            Quit
+          </motion.button>
         </div>
 
         {/* Atlas left, exercise name right */}
@@ -265,6 +328,13 @@ export default function WorkoutCard({ session, onComplete }) {
             <p className="text-sm text-text-muted mt-0.5">{session.sessionTitle}</p>
           </div>
         </div>
+
+        {/* Offline banner */}
+        {offlineMode && (
+          <div className="mt-3 bg-amber-500/15 border border-amber-500/30 rounded-card px-3 py-1.5">
+            <p className="text-xs text-amber-400 font-medium">⚡ Offline mode — showing your last workout</p>
+          </div>
+        )}
       </div>
 
       <div className="px-4 pt-5">
@@ -281,8 +351,7 @@ export default function WorkoutCard({ session, onComplete }) {
             onClick={() => setShowVideo(true)}
             className="w-full flex items-center justify-center gap-2 py-2.5 mb-5 rounded-card border border-brand/40 text-brand text-sm font-medium bg-brand/5 active:bg-brand/15"
           >
-            <span>▶</span>
-            <span>Watch Form Demo</span>
+            <span>{t('workout.watchFormDemo')}</span>
           </motion.button>
         )}
 
@@ -305,10 +374,10 @@ export default function WorkoutCard({ session, onComplete }) {
         {/* Set progress header */}
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-mono text-text-muted uppercase tracking-wider">
-            Set {currentSetIdx + 1} of {totalExSets}
+            {t('workout.logSet', { current: currentSetIdx + 1, total: totalExSets })}
           </span>
           <span className="text-xs text-brand font-semibold">
-            RPE target {currentEx?.rpe} (Rate of Perceived Exertion)
+            {t('workout.rpeTarget', { rpe: currentEx?.rpe })}
           </span>
         </div>
 
@@ -363,7 +432,7 @@ export default function WorkoutCard({ session, onComplete }) {
               className="flex items-center justify-between w-full text-left"
             >
               <span className="text-sm text-text-secondary font-medium">
-                Why this exercise?
+                {t('workout.whyThisExercise')}
               </span>
               <span className="text-text-muted text-xs ml-2">
                 {whyOpenIdx === currentExIdx ? '▲' : '▼'}
@@ -405,7 +474,7 @@ export default function WorkoutCard({ session, onComplete }) {
             onClick={() => setSwapOpenIdx(currentExIdx)}
             className="mt-3 text-xs text-text-muted underline underline-offset-2"
           >
-            Swap exercise →
+            {t('workout.swapExercise')}
           </button>
         )}
 
@@ -413,7 +482,7 @@ export default function WorkoutCard({ session, onComplete }) {
         {exercises.length > currentExIdx + 1 && (
           <div className="mt-8">
             <p className="text-[10px] font-mono text-text-muted uppercase tracking-widest mb-3">
-              Up Next
+              {t('workout.upNext')}
             </p>
             <div className="space-y-2">
               {exercises.slice(currentExIdx + 1).map((ex, i) => (
@@ -468,10 +537,10 @@ export default function WorkoutCard({ session, onComplete }) {
             >
               <div className="w-10 h-1 bg-surface-elevated rounded-full mx-auto mb-6" />
               <h3 className="font-display font-bold text-text-primary mb-1">
-                Swap Exercise
+                {t('workout.swapSheet.title')}
               </h3>
               <p className="text-xs text-text-muted mb-4">
-                Current: {swapped[swapOpenIdx] || exercises[swapOpenIdx]?.name}
+                {t('workout.swapSheet.current', { name: swapped[swapOpenIdx] || exercises[swapOpenIdx]?.name })}
               </p>
 
               <div className="space-y-2">
@@ -502,7 +571,7 @@ export default function WorkoutCard({ session, onComplete }) {
                 onClick={() => setSwapOpenIdx(null)}
                 className="w-full mt-4 py-3 text-sm text-text-muted"
               >
-                Cancel
+                {t('workout.swapSheet.cancel')}
               </button>
             </motion.div>
           </>

@@ -53,8 +53,27 @@ router.post('/generate-session', requireAuth, async (req, res, next) => {
       relevantCitations,
     };
 
-    // 5. Call AI
-    const aiPlan = await generateSession(context);
+    // 5. Call AI with 25-second timeout
+    let aiPlan;
+    try {
+      aiPlan = await Promise.race([
+        generateSession(context),
+        new Promise((_, reject) =>
+          setTimeout(
+            () => reject(Object.assign(new Error('AI_TIMEOUT'), { isTimeout: true })),
+            25000
+          )
+        ),
+      ]);
+    } catch (err) {
+      const isNetworkError =
+        err.isTimeout ||
+        ['ECONNREFUSED', 'ENOTFOUND', 'ECONNRESET', 'ETIMEDOUT'].includes(err.code);
+      if (isNetworkError) {
+        return res.status(503).json({ offline: true });
+      }
+      throw err;
+    }
 
     // 6. Save WorkoutPlan + PlannedSets
     const activeMeso = await prisma.mesocycle.findFirst({

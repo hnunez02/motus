@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import api from '../lib/api.js';
 
 // Group flat set array into workout sessions by calendar day
@@ -100,6 +101,7 @@ function Stat({ label, value, unit }) {
 // ── Log ───────────────────────────────────────────────────────────────────────
 export default function Log() {
   const location = useLocation();
+  const { t } = useTranslation();
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['workout-history'],
@@ -117,9 +119,9 @@ export default function Log() {
     <div style={{ padding: '0 16px 80px' }}>
       <div style={{ paddingTop: 'max(3.5rem, env(safe-area-inset-top))', paddingBottom: 4 }}>
         <h1 style={{ fontSize: 28, fontWeight: 700, color: '#F5F5F5', marginBottom: 4 }}>
-          Workout Log
+          {t('log.title')}
         </h1>
-        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', marginBottom: 20 }}>Last 60 days</p>
+        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', marginBottom: 20 }}>{t('log.subtitle')}</p>
       </div>
 
       {isLoading && (
@@ -138,7 +140,7 @@ export default function Log() {
         <div style={{ textAlign: 'center', marginTop: 60 }}>
           <p style={{ fontSize: 32, marginBottom: 12 }}>🦉</p>
           <p style={{ color: '#888', fontSize: 14 }}>
-            No workouts logged yet. Complete a session and it'll appear here.
+            {t('log.empty')}
           </p>
         </div>
       )}

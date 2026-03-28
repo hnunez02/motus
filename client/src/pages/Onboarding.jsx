@@ -1,83 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import api from '../lib/api.js';
+import { requestHealthKitPermissions } from '../hooks/useHealthKit.js';
 import AtlasAvatar from '../components/ui/AtlasAvatar.jsx';
 
-// ── step data ──────────────────────────────────────────────────────────────
+// ── step data (translated inside component) ────────────────────────────────
 
-const STEPS = [
-  { title: "Let's get to know you",       subtitle: 'How long have you been lifting consistently?' },
-  { title: "What's your main goal?",      subtitle: 'Pick all that apply.' },
-  { title: 'About you',                   subtitle: 'This helps Atlas personalize your programming.' },
-  { title: 'Your body stats',             subtitle: "We'll use this to scale your workouts. You can update this anytime." },
-  { title: 'How active are you?',         subtitle: 'Outside of your workouts, on a typical day.' },
-  { title: 'What equipment do you have?', subtitle: 'Select everything available to you.' },
-  { title: 'Any injury history?',         subtitle: "We'll route around these in your programming." },
-  { title: 'How many days can you train?', subtitle: 'Per week, on average.' },
-  { title: 'Connect Apple Health',        subtitle: 'Optional — Atlas reads your activity, sleep, and heart rate to adapt your training.' },
-];
-
-const TOTAL_STEPS = STEPS.length;
-
-const TRAINING_AGE_OPTIONS = [
-  { label: 'Just starting',      value: 0    },
-  { label: '6 months – 1 year',  value: 0.75 },
-  { label: '1–3 years',          value: 2    },
-  { label: '3–5 years',          value: 4    },
-  { label: '5+ years',           value: 7    },
-];
-
-const GOAL_OPTIONS = [
-  { label: 'Build muscle',         value: 'hypertrophy' },
-  { label: 'Get stronger',         value: 'strength'    },
-  { label: 'Lose fat',             value: 'fat_loss'    },
-  { label: 'Improve endurance',    value: 'endurance'   },
-  { label: 'Athletic performance', value: 'athletic'    },
-];
-
-const BIOLOGICAL_SEX_OPTIONS = [
-  { label: 'Male',              value: 'male'              },
-  { label: 'Female',            value: 'female'            },
-  { label: 'Prefer not to say', value: 'prefer_not_to_say' },
-];
-
-const ACTIVITY_LEVEL_OPTIONS = [
-  { label: '🪑 Sedentary',      subtitle: 'Desk job, mostly sitting',             value: 'sedentary'   },
-  { label: '🚶 Lightly Active', subtitle: 'Light walking, some movement',          value: 'light'       },
-  { label: '🏃 Active',         subtitle: 'On your feet most of the day',          value: 'active'      },
-  { label: '⚡ Very Active',    subtitle: 'Physical job or training twice a day',  value: 'very_active' },
-];
-
-const EQUIPMENT_OPTIONS = [
-  { label: 'Barbell + Plates', value: 'barbell'       },
-  { label: 'Dumbbells',        value: 'dumbbells'     },
-  { label: 'Cable Machine',    value: 'cable'         },
-  { label: 'Smith Machine',    value: 'smith_machine' },
-  { label: 'Resistance Bands', value: 'bands'         },
-  { label: 'Pull-Up Bar',      value: 'pullup_bar'    },
-  { label: 'Full Gym Access',  value: 'full_gym'      },
-  { label: 'Home Gym Only',    value: 'home_gym'      },
-];
-
-const INJURY_OPTIONS = [
-  { label: 'Lower back',     value: 'lower_back'     },
-  { label: 'Left knee',      value: 'left_knee'      },
-  { label: 'Right knee',     value: 'right_knee'     },
-  { label: 'Left shoulder',  value: 'left_shoulder'  },
-  { label: 'Right shoulder', value: 'right_shoulder' },
-  { label: 'Hip flexor',     value: 'hip_flexor'     },
-  { label: 'Wrist',          value: 'wrist'          },
-  { label: 'None',           value: 'none'           },
-];
-
-const DAYS_OPTIONS = [
-  { label: '2 days / week', value: 2 },
-  { label: '3 days / week', value: 3 },
-  { label: '4 days / week', value: 4 },
-  { label: '5 days / week', value: 5 },
-  { label: '6 days / week', value: 6 },
-];
+const TOTAL_STEPS = 9;
 
 // ── animation variants ─────────────────────────────────────────────────────
 
@@ -145,6 +76,71 @@ function SingleChips({ options, selected, onSelect }) {
 
 export default function Onboarding() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
+
+  const STEPS = Array.from({ length: 9 }, (_, i) => ({
+    title:    t(`onboarding.steps.${i + 1}.title`),
+    subtitle: t(`onboarding.steps.${i + 1}.subtitle`),
+  }));
+
+  const TRAINING_AGE_OPTIONS = [
+    { label: t('onboarding.trainingAge.justStarting'), value: 0    },
+    { label: t('onboarding.trainingAge.sixMonths'),    value: 0.75 },
+    { label: t('onboarding.trainingAge.oneToThree'),   value: 2    },
+    { label: t('onboarding.trainingAge.threeToFive'),  value: 4    },
+    { label: t('onboarding.trainingAge.fivePlus'),     value: 7    },
+  ];
+
+  const GOAL_OPTIONS = [
+    { label: t('onboarding.goals.muscle'),    value: 'hypertrophy' },
+    { label: t('onboarding.goals.strength'),  value: 'strength'    },
+    { label: t('onboarding.goals.fatLoss'),   value: 'fat_loss'    },
+    { label: t('onboarding.goals.endurance'), value: 'endurance'   },
+    { label: t('onboarding.goals.athletic'),  value: 'athletic'    },
+  ];
+
+  const BIOLOGICAL_SEX_OPTIONS = [
+    { label: t('onboarding.sex.male'),           value: 'male'              },
+    { label: t('onboarding.sex.female'),          value: 'female'            },
+    { label: t('onboarding.sex.preferNotToSay'), value: 'prefer_not_to_say' },
+  ];
+
+  const ACTIVITY_LEVEL_OPTIONS = [
+    { label: t('onboarding.activityLevel.sedentary.label'),  subtitle: t('onboarding.activityLevel.sedentary.subtitle'),  value: 'sedentary'   },
+    { label: t('onboarding.activityLevel.light.label'),      subtitle: t('onboarding.activityLevel.light.subtitle'),      value: 'light'       },
+    { label: t('onboarding.activityLevel.active.label'),     subtitle: t('onboarding.activityLevel.active.subtitle'),     value: 'active'      },
+    { label: t('onboarding.activityLevel.veryActive.label'), subtitle: t('onboarding.activityLevel.veryActive.subtitle'), value: 'very_active' },
+  ];
+
+  const EQUIPMENT_OPTIONS = [
+    { label: t('onboarding.equipment.barbell'),   value: 'barbell'       },
+    { label: t('onboarding.equipment.dumbbells'), value: 'dumbbells'     },
+    { label: t('onboarding.equipment.cable'),     value: 'cable'         },
+    { label: t('onboarding.equipment.smith'),     value: 'smith_machine' },
+    { label: t('onboarding.equipment.bands'),     value: 'bands'         },
+    { label: t('onboarding.equipment.pullupBar'), value: 'pullup_bar'    },
+    { label: t('onboarding.equipment.fullGym'),   value: 'full_gym'      },
+    { label: t('onboarding.equipment.homeGym'),   value: 'home_gym'      },
+  ];
+
+  const INJURY_OPTIONS = [
+    { label: t('onboarding.injuries.lowerBack'),     value: 'lower_back'     },
+    { label: t('onboarding.injuries.leftKnee'),      value: 'left_knee'      },
+    { label: t('onboarding.injuries.rightKnee'),     value: 'right_knee'     },
+    { label: t('onboarding.injuries.leftShoulder'),  value: 'left_shoulder'  },
+    { label: t('onboarding.injuries.rightShoulder'), value: 'right_shoulder' },
+    { label: t('onboarding.injuries.hipFlexor'),     value: 'hip_flexor'     },
+    { label: t('onboarding.injuries.wrist'),         value: 'wrist'          },
+    { label: t('onboarding.injuries.none'),          value: 'none'           },
+  ];
+
+  const DAYS_OPTIONS = [
+    { label: t('onboarding.days.two'),   value: 2 },
+    { label: t('onboarding.days.three'), value: 3 },
+    { label: t('onboarding.days.four'),  value: 4 },
+    { label: t('onboarding.days.five'),  value: 5 },
+    { label: t('onboarding.days.six'),   value: 6 },
+  ];
 
   const [step,       setStep]      = useState(1);
   const [direction,  setDirection] = useState(1);
@@ -319,7 +315,7 @@ export default function Onboarding() {
           <div className="space-y-6">
             {/* Height */}
             <div>
-              <p className="text-sm text-text-muted mb-3">Height</p>
+              <p className="text-sm text-text-muted mb-3">{t('onboarding.height')}</p>
               <div className="flex gap-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 bg-surface-elevated rounded-card px-4 py-3 border border-surface-elevated focus-within:border-brand">
@@ -333,6 +329,7 @@ export default function Onboarding() {
                         const newCm = ftInToCm(e.target.value, inches);
                         setProfile((p) => ({ ...p, heightCm: newCm > 0 ? newCm : null }));
                       }}
+                      style={{ fontSize: '16px' }}
                       className="flex-1 bg-transparent text-text-primary text-lg font-semibold w-12 focus:outline-none"
                     />
                     <span className="text-text-muted text-sm">ft</span>
@@ -350,6 +347,7 @@ export default function Onboarding() {
                         const newCm = ftInToCm(ft, e.target.value);
                         setProfile((p) => ({ ...p, heightCm: newCm > 0 ? newCm : null }));
                       }}
+                      style={{ fontSize: '16px' }}
                       className="flex-1 bg-transparent text-text-primary text-lg font-semibold w-12 focus:outline-none"
                     />
                     <span className="text-text-muted text-sm">in</span>
@@ -360,7 +358,7 @@ export default function Onboarding() {
 
             {/* Weight */}
             <div>
-              <p className="text-sm text-text-muted mb-3">Weight</p>
+              <p className="text-sm text-text-muted mb-3">{t('onboarding.weight')}</p>
               <div className="flex items-center gap-2 bg-surface-elevated rounded-card px-4 py-3 border border-surface-elevated focus-within:border-brand">
                 <input
                   type="number"
@@ -372,6 +370,7 @@ export default function Onboarding() {
                     const kg = lbsToKg(e.target.value);
                     setProfile((p) => ({ ...p, weightKg: kg > 0 ? kg : null }));
                   }}
+                  style={{ fontSize: '16px' }}
                   className="flex-1 bg-transparent text-text-primary text-lg font-semibold focus:outline-none"
                 />
                 <span className="text-text-muted text-sm">lbs</span>
@@ -427,7 +426,7 @@ export default function Onboarding() {
               onChange={(e) =>
                 setProfile((p) => ({ ...p, injuryNote: e.target.value }))
               }
-              placeholder="Anything else? (optional)"
+              placeholder={t('onboarding.injuries.other')}
               className="w-full bg-surface-elevated text-text-primary placeholder:text-text-muted px-4 py-3 rounded-card border border-surface-elevated focus:outline-none focus:border-brand text-sm"
             />
           </div>
@@ -447,11 +446,11 @@ export default function Onboarding() {
           <div className="space-y-4">
             <div className="bg-surface-elevated rounded-card p-4 space-y-3">
               {[
-                { icon: '❤️', label: 'Resting heart rate',    desc: 'Detects recovery status'         },
-                { icon: '📊', label: 'Heart rate variability', desc: 'Gold standard for readiness'      },
-                { icon: '😴', label: 'Sleep duration',         desc: 'Adjusts session intensity'        },
-                { icon: '🏃', label: 'Active energy & steps',  desc: 'Tracks daily activity load'       },
-                { icon: '⚖️', label: 'Body weight',            desc: 'Scales progressive overload'      },
+                { icon: '❤️', label: t('onboarding.healthKit.restingHR'),  desc: t('onboarding.healthKit.restingHRDesc') },
+                { icon: '📊', label: t('onboarding.healthKit.hrv'),        desc: t('onboarding.healthKit.hrvDesc')       },
+                { icon: '😴', label: t('onboarding.healthKit.sleep'),      desc: t('onboarding.healthKit.sleepDesc')     },
+                { icon: '🏃', label: t('onboarding.healthKit.energy'),     desc: t('onboarding.healthKit.energyDesc')    },
+                { icon: '⚖️', label: t('onboarding.healthKit.weight'),     desc: t('onboarding.healthKit.weightDesc')    },
               ].map(({ icon, label, desc }) => (
                 <div key={label} className="flex items-center gap-3">
                   <span className="text-xl w-7 flex-shrink-0">{icon}</span>
@@ -464,19 +463,33 @@ export default function Onboarding() {
             </div>
 
             <p className="text-xs text-text-muted text-center px-2">
-              Read-only · Never shared · You can disconnect anytime in Settings
+              {t('onboarding.healthKit.disclaimer')}
             </p>
 
             <motion.button
               whileTap={{ scale: 0.97 }}
-              onClick={() => setProfile((p) => ({ ...p, healthKitConnected: true }))}
+              onClick={async () => {
+                // Show a brief loading state
+                setProfile((p) => ({ ...p, healthKitConnected: false }));
+                try {
+                  const granted = await requestHealthKitPermissions();
+                  setProfile((p) => ({ ...p, healthKitConnected: granted }));
+                  if (!granted) {
+                    // Guide user to Settings if permission was denied
+                    console.log('HealthKit permission not granted — user may need to enable in iOS Settings > Privacy > Health');
+                  }
+                } catch (e) {
+                  console.log('Connect button error:', e.message);
+                  setProfile((p) => ({ ...p, healthKitConnected: false }));
+                }
+              }}
               className={`w-full py-4 rounded-card font-semibold text-base transition-colors ${
                 profile.healthKitConnected
                   ? 'bg-green-500/20 text-green-400 border border-green-500/30'
                   : 'bg-brand text-white'
               }`}
             >
-              {profile.healthKitConnected ? '✓ Apple Health Connected' : 'Connect Apple Health'}
+              {profile.healthKitConnected ? t('onboarding.healthKit.connected') : t('onboarding.healthKit.connect')}
             </motion.button>
           </div>
         );
@@ -502,7 +515,7 @@ export default function Onboarding() {
 
       {/* Step counter */}
       <p className="text-[10px] font-mono text-text-muted uppercase tracking-widest mb-8">
-        Step {step} of {TOTAL_STEPS}
+        {t('onboarding.stepCounter', { step, total: TOTAL_STEPS })}
       </p>
 
       {/* Atlas header */}
@@ -547,7 +560,7 @@ export default function Onboarding() {
             disabled={submitting}
             className="flex-1 py-3 rounded-card border border-surface-elevated text-text-secondary text-sm font-medium disabled:opacity-40"
           >
-            ← Back
+            {t('onboarding.buttons.back')}
           </button>
         )}
         <motion.button
@@ -557,10 +570,10 @@ export default function Onboarding() {
           className="flex-1 py-4 rounded-card bg-brand text-white font-semibold text-base disabled:opacity-40 transition-opacity"
         >
           {submitting
-            ? 'Building your program…'
+            ? t('onboarding.buttons.building')
             : step === TOTAL_STEPS
-              ? (profile.healthKitConnected ? "Let's go 🐾" : 'Skip & Continue →')
-              : 'Continue →'}
+              ? (profile.healthKitConnected ? t('onboarding.buttons.letsGo') : t('onboarding.buttons.skip'))
+              : t('onboarding.buttons.continue')}
         </motion.button>
       </div>
 
