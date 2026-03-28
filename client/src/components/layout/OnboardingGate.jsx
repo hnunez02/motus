@@ -3,7 +3,7 @@ import { Navigate, Outlet } from 'react-router-dom';
 import api from '../../lib/api.js';
 
 export default function OnboardingGate() {
-  const [status, setStatus] = useState('loading'); // 'loading' | 'needed' | 'complete'
+  const [status, setStatus] = useState('loading'); // 'loading' | 'unauthenticated' | 'needed' | 'complete'
 
   useEffect(() => {
     // Timeout after 5s so airplane mode never hangs the app on the loading screen
@@ -16,10 +16,14 @@ export default function OnboardingGate() {
         const complete = user && user.daysPerWeek !== null && user.daysPerWeek !== undefined;
         setStatus(complete ? 'complete' : 'needed');
       })
-      .catch(() => {
+      .catch((err) => {
         clearTimeout(timeout);
-        // Network error or not logged in — let the app handle auth downstream
-        setStatus('complete');
+        if (err?.response?.status === 401) {
+          setStatus('unauthenticated');
+        } else {
+          // Network error — let the app load and handle it downstream
+          setStatus('complete');
+        }
       });
 
     return () => clearTimeout(timeout);
@@ -39,6 +43,10 @@ export default function OnboardingGate() {
         </p>
       </div>
     );
+  }
+
+  if (status === 'unauthenticated') {
+    return <Navigate to="/auth" replace />;
   }
 
   if (status === 'needed') {

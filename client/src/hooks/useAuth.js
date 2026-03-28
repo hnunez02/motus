@@ -52,6 +52,7 @@ export function useAuth() {
   async function signOut() {
     await supabase.auth.signOut();
     setProfile(null);
+    window.location.replace('/auth');
   }
 
   async function updateProfile(updates) {
