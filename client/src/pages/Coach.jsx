@@ -2,9 +2,12 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
+import { Capacitor } from '@capacitor/core';
+import { Browser } from '@capacitor/browser';
 import api from '../lib/api.js';
 import { useAI } from '../hooks/useAI.js';
 import AtlasAvatar from '../components/ui/AtlasAvatar.jsx';
+import ExerciseMusclePreview from '../components/ExerciseMusclePreview.jsx';
 
 // ── constants ─────────────────────────────────────────────────────────────
 
@@ -88,15 +91,22 @@ function ExerciseLibraryCard({ exercise, onTap }) {
         <span className="font-semibold text-text-primary text-sm leading-tight">
           {exercise?.name ?? ''}
         </span>
-        <span
-          className={`text-[10px] font-mono uppercase tracking-wide flex-shrink-0 px-2 py-0.5 rounded-chip ${
-            exercise?.category === 'compound'
-              ? 'bg-brand text-white'
-              : 'border border-surface-elevated text-text-muted'
-          }`}
-        >
-          {exercise?.category ?? ''}
-        </span>
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {exercise?.videoUrl && (
+            <span className="text-[10px] px-2 py-0.5 rounded-chip bg-[#FF0000]/15 text-[#FF0000] font-medium flex-shrink-0">
+              ▶ Demo
+            </span>
+          )}
+          <span
+            className={`text-[10px] font-mono uppercase tracking-wide flex-shrink-0 px-2 py-0.5 rounded-chip ${
+              exercise?.category === 'compound'
+                ? 'bg-brand text-white'
+                : 'border border-surface-elevated text-text-muted'
+            }`}
+          >
+            {exercise?.category ?? ''}
+          </span>
+        </div>
       </div>
       <div className="flex flex-wrap gap-1">
         {(exercise?.muscleGroups ?? []).map((m) => (
@@ -167,19 +177,49 @@ function ExerciseDetailSheet({ exercise, onClose }) {
         </div>
 
         <div className="px-5 pt-5 pb-10 space-y-5">
-          {/* Video placeholder */}
-          <div className="w-full aspect-video bg-surface-elevated rounded-card flex flex-col items-center justify-center gap-2">
-            <div className="w-12 h-12 rounded-full bg-surface-card flex items-center justify-center">
-              <span className="text-brand text-xl ml-0.5">▶</span>
+          {/* Form Demo Video */}
+          {exercise?.videoUrl ? (
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={async () => {
+                const youtubeAppUrl = `youtube://www.youtube.com/watch?v=${exercise.videoUrl}`;
+                const watchUrl = `https://www.youtube.com/watch?v=${exercise.videoUrl}`;
+                if (Capacitor.isNativePlatform()) {
+                  try {
+                    await Browser.open({ url: youtubeAppUrl });
+                  } catch {
+                    await Browser.open({ url: watchUrl });
+                  }
+                } else {
+                  window.open(watchUrl, '_blank');
+                }
+              }}
+              className="w-full aspect-video bg-surface-elevated rounded-card flex flex-col items-center justify-center gap-3 border border-brand/20"
+            >
+              <div className="w-14 h-14 rounded-2xl bg-[#FF0000] flex items-center justify-center">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                </svg>
+              </div>
+              <div className="text-center">
+                <p className="text-white font-semibold text-sm">Watch Form Demo</p>
+                <p className="text-white/40 text-xs mt-0.5">Opens YouTube app</p>
+              </div>
+            </motion.button>
+          ) : (
+            <div className="w-full aspect-video bg-surface-elevated rounded-card flex flex-col items-center justify-center gap-2">
+              <div className="w-12 h-12 rounded-full bg-surface-card flex items-center justify-center">
+                <span className="text-text-muted text-xl ml-0.5">▶</span>
+              </div>
+              <span className="text-xs text-text-muted">No demo available</span>
             </div>
-            <span className="text-xs text-text-muted">Video coming soon</span>
-          </div>
+          )}
 
-          {/* Muscle diagram placeholder */}
-          <div className="w-full h-28 bg-surface-elevated rounded-card flex flex-col items-center justify-center gap-1.5">
-            <span className="text-2xl opacity-40">🫀</span>
-            <span className="text-xs text-text-muted">Muscle diagram coming soon</span>
-          </div>
+          {/* Muscle diagram */}
+          <ExerciseMusclePreview
+            primaryMuscles={exercise?.muscleGroups ?? []}
+            secondaryMuscles={[]}
+          />
 
           {/* Form cues */}
           {(exercise?.formCues ?? []).length > 0 && (
