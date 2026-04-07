@@ -115,25 +115,34 @@ export default function Today() {
         console.log('Fatigue response:', r.data);
         return r.data;
       }).catch((error) => {
-        console.error('Fatigue fetch error:', error.message, error.response?.status);
-        throw error;
+        console.error('Fatigue fetch error:', error.message);
+        return { fatigueScore: 0, deload: { shouldDeload: false, reason: null } };
       }),
+    retry: false,
   });
 
   // ── boot conversation once fatigue resolves ───────────────────────
   useEffect(() => {
-    if (fatigueData === undefined) return;
     if (ctx.step !== 'init') return;
 
-    const score = fatigueData?.fatigueScore ?? 0;
+    const boot = (score) => {
+      if (score > 7.5) {
+        setMessages([atlasBubble(t('today.fatigue.warning'))]);
+        setCtx((c) => ({ ...c, step: 'fatigue_override' }));
+      } else {
+        setMessages([atlasBubble(t('today.whereTraining'))]);
+        setCtx((c) => ({ ...c, step: 'environment' }));
+      }
+    };
 
-    if (score > 7.5) {
-      setMessages([atlasBubble(t('today.fatigue.warning'))]);
-      setCtx((c) => ({ ...c, step: 'fatigue_override' }));
-    } else {
-      setMessages([atlasBubble(t('today.whereTraining'))]);
-      setCtx((c) => ({ ...c, step: 'environment' }));
+    if (fatigueData !== undefined) {
+      boot(fatigueData?.fatigueScore ?? 0);
+      return;
     }
+
+    // Safety net — boot with score 0 after 3s if fatigue never resolves
+    const timer = setTimeout(() => boot(0), 3000);
+    return () => clearTimeout(timer);
   }, [fatigueData, ctx.step]);
 
   // ── auto-scroll on every new message ─────────────────────────────
